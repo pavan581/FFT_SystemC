@@ -1,0 +1,248 @@
+Starting Interleaved FFT Simulation (Refactored)
+
+Info: (I703) tracing timescale unit set: 1 ps (./out/vcd/InterleavedFFT-DMA_N8_C2_H1.vcd)
+
+[TEST 1] Standard Operation (N=8, Cores=2)...
+@6 ns Initializing Memory...
+@43 ns Triggering Start...
+DEBUGL DMA[0] Read Addr: 1 @ 47 ns
+DEBUGL DMA[1] Read Addr: 8 @ 47 ns
+DEBUGL DMA[0] Read Addr: 2 @ 48 ns
+DEBUGL DMA[1] Read Addr: 9 @ 48 ns
+DEBUGL DMA[0] Read Addr: 3 @ 49 ns
+DEBUGL DMA[1] Read Addr: 10 @ 49 ns
+DEBUGL DMA[0] Read Addr: 4 @ 50 ns
+DEBUGL DMA[1] Read Addr: 11 @ 50 ns
+DEBUGL DMA[0] Read Addr: 5 @ 51 ns
+DEBUGL DMA[1] Read Addr: 12 @ 51 ns
+DEBUGL DMA[0] Read Addr: 6 @ 52 ns
+DEBUGL DMA[1] Read Addr: 13 @ 52 ns
+DEBUGL DMA[0] Read Addr: 7 @ 53 ns
+DEBUGL DMA[1] Read Addr: 14 @ 53 ns
+DEBUGL DMA[1] Read Addr: 15 @ 54 ns
+@57 ns [Core 0] Out[ 0] = (28 + 0j)
+@58 ns [Core 0] Out[ 1] = (-4 + 0j)
+@58 ns [Core 1] Out[ 0] = (92 + 0j)
+@59 ns [Core 0] Out[ 2] = (-4 + 4j)
+@59 ns [Core 1] Out[ 1] = (-4 + 0j)
+@60 ns [Core 0] Out[ 3] = (-4 + -4j)
+@60 ns [Core 1] Out[ 2] = (-4 + 4j)
+@61 ns [Core 0] Out[ 4] = (-4 + 9.65685j)
+@61 ns [Core 1] Out[ 3] = (-4 + -4j)
+@62 ns [Core 0] Out[ 5] = (-4 + -1.65685j)
+@62 ns [Core 1] Out[ 4] = (-4 + 9.65685j)
+@63 ns [Core 0] Out[ 6] = (-4 + 1.65685j)
+@63 ns [Core 1] Out[ 5] = (-4 + -1.65685j)
+@64 ns [Core 0] Out[ 7] = (-4 + -9.65685j)
+@64 ns [Core 1] Out[ 6] = (-4 + 1.65685j)
+@65 ns [Core 1] Out[ 7] = (-4 + -9.65685j)
+[TEST 1] Finished.
+
+[TEST 2] Consecutive Starts...
+@2044 ns Triggering Start (Run 2)...
+DEBUGL DMA[0] Read Addr: 0 @ 2047 ns
+DEBUGL DMA[0] Read Addr: 1 @ 2048 ns
+DEBUGL DMA[1] Read Addr: 8 @ 2048 ns
+DEBUGL DMA[0] Read Addr: 2 @ 2049 ns
+DEBUGL DMA[1] Read Addr: 9 @ 2049 ns
+DEBUGL DMA[0] Read Addr: 3 @ 2050 ns
+DEBUGL DMA[1] Read Addr: 10 @ 2050 ns
+DEBUGL DMA[0] Read Addr: 4 @ 2051 ns
+DEBUGL DMA[1] Read Addr: 11 @ 2051 ns
+DEBUGL DMA[0] Read Addr: 5 @ 2052 ns
+DEBUGL DMA[1] Read Addr: 12 @ 2052 ns
+DEBUGL DMA[0] Read Addr: 6 @ 2053 ns
+DEBUGL DMA[1] Read Addr: 13 @ 2053 ns
+DEBUGL DMA[0] Read Addr: 7 @ 2054 ns
+DEBUGL DMA[1] Read Addr: 14 @ 2054 ns
+DEBUGL DMA[1] Read Addr: 15 @ 2055 ns
+@2058 ns [Core 0] Out[ 0] = (28 + 0j)
+@2059 ns [Core 0] Out[ 1] = (-4 + 0j)
+@2059 ns [Core 1] Out[ 0] = (92 + 0j)
+@2060 ns [Core 0] Out[ 2] = (-4 + 4j)
+@2060 ns [Core 1] Out[ 1] = (-4 + 0j)
+@2061 ns [Core 0] Out[ 3] = (-4 + -4j)
+@2061 ns [Core 1] Out[ 2] = (-4 + 4j)
+@2062 ns [Core 0] Out[ 4] = (-4 + 9.65685j)
+@2062 ns [Core 1] Out[ 3] = (-4 + -4j)
+@2063 ns [Core 0] Out[ 5] = (-4 + -1.65685j)
+@2063 ns [Core 1] Out[ 4] = (-4 + 9.65685j)
+@2064 ns [Core 0] Out[ 6] = (-4 + 1.65685j)
+@2064 ns [Core 1] Out[ 5] = (-4 + -1.65685j)
+@2065 ns [Core 0] Out[ 7] = (-4 + -9.65685j)
+@2065 ns [Core 1] Out[ 6] = (-4 + 1.65685j)
+@2066 ns [Core 1] Out[ 7] = (-4 + -9.65685j)
+[TEST 2] Finished.
+
+[TEST 3] Mid-flight Reset...
+DEBUGL DMA[0] Read Addr: 0 @ 4048 ns
+DEBUGL DMA[0] Read Addr: 1 @ 4049 ns
+DEBUGL DMA[1] Read Addr: 8 @ 4049 ns
+DEBUGL DMA[0] Read Addr: 2 @ 4050 ns
+DEBUGL DMA[1] Read Addr: 9 @ 4050 ns
+DEBUGL DMA[0] Read Addr: 3 @ 4051 ns
+DEBUGL DMA[1] Read Addr: 10 @ 4051 ns
+DEBUGL DMA[0] Read Addr: 4 @ 4052 ns
+DEBUGL DMA[1] Read Addr: 11 @ 4052 ns
+DEBUGL DMA[0] Read Addr: 5 @ 4053 ns
+DEBUGL DMA[1] Read Addr: 12 @ 4053 ns
+DEBUGL DMA[0] Read Addr: 6 @ 4054 ns
+DEBUGL DMA[1] Read Addr: 13 @ 4054 ns
+DEBUGL DMA[0] Read Addr: 7 @ 4055 ns
+DEBUGL DMA[1] Read Addr: 14 @ 4055 ns
+@4055 ns Asserting Reset!
+DEBUGL DMA[1] Read Addr: 15 @ 4056 ns
+DEBUGL DMA[0] Read Addr: 0 @ 4057 ns
+DEBUGL DMA[1] Read Addr: 0 @ 4057 ns
+@4057 ns Re-initializing Memory after Reset...
+[TEST 3] Finished.
+
+[TEST 4] Mid-flight Restart...
+DEBUGL DMA[0] Read Addr: 1 @ 6094 ns
+DEBUGL DMA[1] Read Addr: 8 @ 6094 ns
+DEBUGL DMA[0] Read Addr: 2 @ 6095 ns
+DEBUGL DMA[1] Read Addr: 9 @ 6095 ns
+DEBUGL DMA[0] Read Addr: 3 @ 6096 ns
+DEBUGL DMA[1] Read Addr: 10 @ 6096 ns
+DEBUGL DMA[0] Read Addr: 4 @ 6097 ns
+DEBUGL DMA[1] Read Addr: 11 @ 6097 ns
+DEBUGL DMA[0] Read Addr: 5 @ 6098 ns
+DEBUGL DMA[1] Read Addr: 12 @ 6098 ns
+DEBUGL DMA[0] Read Addr: 6 @ 6099 ns
+DEBUGL DMA[1] Read Addr: 13 @ 6099 ns
+DEBUGL DMA[0] Read Addr: 7 @ 6100 ns
+DEBUGL DMA[1] Read Addr: 14 @ 6100 ns
+@6100 ns Pulsing Start AGAIN (Intrusion)...
+DEBUGL DMA[1] Read Addr: 15 @ 6101 ns
+@6104 ns [Core 0] Out[ 0] = (28 + 0j)
+@6105 ns [Core 0] Out[ 1] = (-4 + 0j)
+@6105 ns [Core 1] Out[ 0] = (92 + 0j)
+@6106 ns [Core 0] Out[ 2] = (-4 + 4j)
+@6106 ns [Core 1] Out[ 1] = (-4 + 0j)
+@6107 ns [Core 0] Out[ 3] = (-4 + -4j)
+@6107 ns [Core 1] Out[ 2] = (-4 + 4j)
+@6108 ns [Core 0] Out[ 4] = (-4 + 9.65685j)
+@6108 ns [Core 1] Out[ 3] = (-4 + -4j)
+@6109 ns [Core 0] Out[ 5] = (-4 + -1.65685j)
+@6109 ns [Core 1] Out[ 4] = (-4 + 9.65685j)
+@6110 ns [Core 0] Out[ 6] = (-4 + 1.65685j)
+@6110 ns [Core 1] Out[ 5] = (-4 + -1.65685j)
+@6111 ns [Core 0] Out[ 7] = (-4 + -9.65685j)
+@6111 ns [Core 1] Out[ 6] = (-4 + 1.65685j)
+@6112 ns [Core 1] Out[ 7] = (-4 + -9.65685j)
+[TEST 4] Finished.
+
+[TEST 5] Dynamic Reconfiguration...
+@8101 ns Triggering Start (New Config)...
+DEBUGL DMA[0] Read Addr: 16 @ 8104 ns
+DEBUGL DMA[0] Read Addr: 17 @ 8105 ns
+DEBUGL DMA[1] Read Addr: 24 @ 8105 ns
+DEBUGL DMA[0] Read Addr: 18 @ 8106 ns
+DEBUGL DMA[1] Read Addr: 25 @ 8106 ns
+DEBUGL DMA[0] Read Addr: 19 @ 8107 ns
+DEBUGL DMA[1] Read Addr: 26 @ 8107 ns
+DEBUGL DMA[0] Read Addr: 20 @ 8108 ns
+DEBUGL DMA[1] Read Addr: 27 @ 8108 ns
+DEBUGL DMA[0] Read Addr: 21 @ 8109 ns
+DEBUGL DMA[1] Read Addr: 28 @ 8109 ns
+DEBUGL DMA[0] Read Addr: 22 @ 8110 ns
+DEBUGL DMA[1] Read Addr: 29 @ 8110 ns
+DEBUGL DMA[0] Read Addr: 23 @ 8111 ns
+DEBUGL DMA[1] Read Addr: 30 @ 8111 ns
+DEBUGL DMA[1] Read Addr: 31 @ 8112 ns
+@8115 ns [Core 0] Out[ 0] = (156 + 0j)
+@8116 ns [Core 0] Out[ 1] = (-4 + 0j)
+@8116 ns [Core 1] Out[ 0] = (220 + 0j)
+@8117 ns [Core 0] Out[ 2] = (-4 + 4j)
+@8117 ns [Core 1] Out[ 1] = (-4 + 0j)
+@8118 ns [Core 0] Out[ 3] = (-4 + -4j)
+@8118 ns [Core 1] Out[ 2] = (-4 + 4j)
+@8119 ns [Core 0] Out[ 4] = (-4 + 9.65685j)
+@8119 ns [Core 1] Out[ 3] = (-4 + -4j)
+@8120 ns [Core 0] Out[ 5] = (-4 + -1.65685j)
+@8120 ns [Core 1] Out[ 4] = (-4 + 9.65685j)
+@8121 ns [Core 0] Out[ 6] = (-4 + 1.65685j)
+@8121 ns [Core 1] Out[ 5] = (-4 + -1.65685j)
+@8122 ns [Core 0] Out[ 7] = (-4 + -9.65685j)
+@8122 ns [Core 1] Out[ 6] = (-4 + 1.65685j)
+@8123 ns [Core 1] Out[ 7] = (-4 + -9.65685j)
+[TEST 5] Finished.
+
+[TEST 6] Partial Input...
+@10102 ns Triggering Start (Partial Inputs)...
+DEBUGL DMA[0] Read Addr: 0 @ 10105 ns
+DEBUGL DMA[0] Read Addr: 1 @ 10106 ns
+DEBUGL DMA[1] Read Addr: 8 @ 10106 ns
+DEBUGL DMA[0] Read Addr: 2 @ 10107 ns
+DEBUGL DMA[1] Read Addr: 9 @ 10107 ns
+DEBUGL DMA[0] Read Addr: 3 @ 10108 ns
+DEBUGL DMA[1] Read Addr: 10 @ 10108 ns
+DEBUGL DMA[0] Read Addr: 4 @ 10109 ns
+DEBUGL DMA[1] Read Addr: 11 @ 10109 ns
+DEBUGL DMA[0] Read Addr: 5 @ 10110 ns
+DEBUGL DMA[0] Read Addr: 6 @ 10111 ns
+DEBUGL DMA[0] Read Addr: 7 @ 10112 ns
+@10116 ns [Core 0] Out[ 0] = (28 + 0j)
+@10117 ns [Core 0] Out[ 1] = (-4 + 0j)
+@10117 ns [Core 1] Out[ 0] = (38 + 0j)
+@10118 ns [Core 0] Out[ 2] = (-4 + 4j)
+@10118 ns [Core 1] Out[ 1] = (-2 + 0j)
+@10119 ns [Core 0] Out[ 3] = (-4 + -4j)
+@10119 ns [Core 1] Out[ 2] = (-2 + 2j)
+@10120 ns [Core 0] Out[ 4] = (-4 + 9.65685j)
+@10120 ns [Core 1] Out[ 3] = (-2 + -2j)
+@10121 ns [Core 0] Out[ 5] = (-4 + -1.65685j)
+@10122 ns [Core 0] Out[ 6] = (-4 + 1.65685j)
+@10123 ns [Core 0] Out[ 7] = (-4 + -9.65685j)
+[TEST 6] Finished.
+
+[TEST 7] Continuous Stream (10 inputs for N=4)...
+DEBUGL DMA[0] Read Addr: 0 @ 12105 ns
+DEBUGL DMA[1] Read Addr: 0 @ 12105 ns
+@12109 ns Initializing Memory for Stream...
+@12270 ns Triggering Start (Continuous Stream)...
+DEBUGL DMA[0] Read Addr: 1 @ 12274 ns
+DEBUGL DMA[1] Read Addr: 8 @ 12274 ns
+DEBUGL DMA[0] Read Addr: 2 @ 12275 ns
+DEBUGL DMA[1] Read Addr: 9 @ 12275 ns
+DEBUGL DMA[0] Read Addr: 3 @ 12276 ns
+DEBUGL DMA[1] Read Addr: 10 @ 12276 ns
+DEBUGL DMA[0] Read Addr: 4 @ 12277 ns
+DEBUGL DMA[1] Read Addr: 11 @ 12277 ns
+DEBUGL DMA[0] Read Addr: 5 @ 12278 ns
+DEBUGL DMA[1] Read Addr: 12 @ 12278 ns
+DEBUGL DMA[0] Read Addr: 6 @ 12279 ns
+DEBUGL DMA[1] Read Addr: 13 @ 12279 ns
+DEBUGL DMA[0] Read Addr: 7 @ 12280 ns
+DEBUGL DMA[1] Read Addr: 14 @ 12280 ns
+DEBUGL DMA[0] Read Addr: 8 @ 12281 ns
+DEBUGL DMA[1] Read Addr: 15 @ 12281 ns
+DEBUGL DMA[0] Read Addr: 9 @ 12282 ns
+DEBUGL DMA[1] Read Addr: 16 @ 12282 ns
+DEBUGL DMA[1] Read Addr: 17 @ 12283 ns
+@12284 ns [Core 0] Out[ 0] = (28 + 0j)
+@12285 ns [Core 0] Out[ 1] = (-4 + 0j)
+@12285 ns [Core 1] Out[ 0] = (92 + 0j)
+@12286 ns [Core 0] Out[ 2] = (-4 + 4j)
+@12286 ns [Core 1] Out[ 1] = (-4 + 0j)
+@12287 ns [Core 0] Out[ 3] = (-4 + -4j)
+@12287 ns [Core 1] Out[ 2] = (-4 + 4j)
+@12288 ns [Core 0] Out[ 4] = (-4 + 9.65685j)
+@12288 ns [Core 1] Out[ 3] = (-4 + -4j)
+@12289 ns [Core 0] Out[ 5] = (-4 + -1.65685j)
+@12289 ns [Core 1] Out[ 4] = (-4 + 9.65685j)
+@12290 ns [Core 0] Out[ 6] = (-4 + 1.65685j)
+@12290 ns [Core 1] Out[ 5] = (-4 + -1.65685j)
+@12291 ns [Core 0] Out[ 7] = (-4 + -9.65685j)
+@12291 ns [Core 1] Out[ 6] = (-4 + 1.65685j)
+@12292 ns [Core 0] Out[ 0] = (17 + 0j)
+@12292 ns [Core 1] Out[ 7] = (-4 + -9.65685j)
+@12293 ns [Core 0] Out[ 1] = (-1 + 0j)
+@12293 ns [Core 1] Out[ 0] = (33 + 0j)
+@12294 ns [Core 1] Out[ 1] = (-1 + 0j)
+[TEST 7] Finished.
+
+[ALL TESTS FINISHED] @ 12471 ns
+
+Info: /OSCI/SystemC: Simulation stopped by user.
+Simulation Finished.
