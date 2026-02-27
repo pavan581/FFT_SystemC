@@ -1,0 +1,11 @@
+# Build directory
+build
+
+# Archive directory
+archive
+
+# Testing Folder
+test
+
+# Workspace Folder
+.vscode
