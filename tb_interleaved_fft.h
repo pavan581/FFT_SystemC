@@ -21,6 +21,7 @@
 #include <systemc.h>
 #include "interleaved_fft.h"
 #include "memory.h"
+#include "monitor.h"
 #include <vector>
 #include <iostream>
 #include <iomanip>
@@ -60,6 +61,8 @@ SC_MODULE(Testbench) {
     sc_vector<sc_signal<bool>> out_valids;
     sc_vector<sc_signal<int>> out_indices;
     
+    Monitor<NUM_CORES, ADDR_WIDTH>* mon;
+
     sc_trace_file* tf;
 
     SC_CTOR(Testbench) :
@@ -101,8 +104,14 @@ SC_MODULE(Testbench) {
         SC_THREAD(source_thread);
         sensitive << clk.posedge_event();
         
-        SC_METHOD(sink_method);
-        sensitive << clk.posedge_event();
+        mon = new Monitor<NUM_CORES, ADDR_WIDTH>("monitor");
+        mon->clk(clk);
+        for(int i=0; i<NUM_CORES; i++) {
+            mon->out_data[i](out_data[i]);
+            mon->out_valids[i](out_valids[i]);
+            mon->out_indices[i](out_indices[i]);
+            mon->mem_raddrs[i](mem_raddrs[i]);
+        }
 
         SC_METHOD(cycle_counter);
         sensitive << clk.posedge_event();
@@ -130,6 +139,7 @@ SC_MODULE(Testbench) {
         sc_close_vcd_trace_file(tf);
         delete fft_sys;
         delete mem;
+        delete mon;
     }
 
     int cycle_cnt = 0;
@@ -323,26 +333,6 @@ SC_MODULE(Testbench) {
         sc_stop();
     }
 
-    // Sink method for monitoring output.
-    // Prints valid output samples and flags unexpected memory reads.
-    void sink_method() {
-        for (int i = 0; i < NUM_CORES; i++) {
-            if (out_valids[i].read()) {
-                std::cout << "@" << std::setw(5) << sc_time_stamp() 
-                          << " [Core " << i << "] Out[" << std::setw(2) << out_indices[i].read() << "] = " 
-                          << out_data[i].read() << std::endl;
-            }
-        }
-        
-        static sc_uint<ADDR_WIDTH> last_addr[NUM_CORES] = {0, 0};
-        for(int i=0; i<NUM_CORES; i++) {
-            if (mem_raddrs[i].read() != last_addr[i]) {
-                 std::cout << "DEBUGL DMA[" << i << "] Read Addr: " << mem_raddrs[i].read() << " @ " << sc_time_stamp() << std::endl;
-                 last_addr[i] = mem_raddrs[i].read();
-            }
-        }
-    }
-    
     // Helper method to pack real and imaginary parts into a 64-bit word.
     // Upper 32 bits: Real part, Lower 32 bits: Imaginary part.
     sc_uint<64> pack_complex(double r, double i) {
