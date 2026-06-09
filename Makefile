@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-CXX = g++
+CXX = g++ -g
 
 SYSTEMC_LIB = $(SYSTEMC_HOME)/lib-linux64
 

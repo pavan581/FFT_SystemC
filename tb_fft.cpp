@@ -19,7 +19,7 @@
 
 using namespace std;
 
-template<int N>
+template<int N, int NUM_MULT=4, int NUM_ADD=6>
 SC_MODULE(FFT_TB) {
     // Signals
     sc_clock                clk;
@@ -29,13 +29,14 @@ SC_MODULE(FFT_TB) {
     sc_signal<complex_t>    in_data, out_data;
     sc_signal<int>          in_index, out_index;
     sc_signal<bool>         status;
+    sc_signal<bool>         pipeline_step_sig;
 
     FFT* fft;
 
     sc_trace_file* tf;
 
     SC_CTOR(FFT_TB) : clk("clk", 1, SC_NS) {
-        fft = new FFT("fft", N);
+        fft = new FFT("fft", N, NUM_MULT, NUM_ADD);
         fft->clk(clk);
         fft->rst(rst);
         fft->status(status);
@@ -45,18 +46,21 @@ SC_MODULE(FFT_TB) {
         fft->out_valid(out_valid);
         fft->out_index(out_index);
         fft->out_data(out_data);
+        fft->pipeline_step_sig(pipeline_step_sig);
 
         string trace_name = "./out/vcd/FFT_N" + to_string(N);
         tf = sc_create_vcd_trace_file(trace_name.c_str());
         tf->set_time_unit(1, SC_PS);
         sc_trace(tf, clk,       "clk");
         sc_trace(tf, rst,       "rst");
+        sc_trace(tf, status,    "status");
         sc_trace(tf, in_valid,  "in_valid");
         sc_trace(tf, in_index,  "in_index");
         sc_trace(tf, in_data,   "in_data");
         sc_trace(tf, out_valid, "out_valid");
         sc_trace(tf, out_index, "out_index");
         sc_trace(tf, out_data,  "out_data");
+        sc_trace(tf, pipeline_step_sig, "pipeline_step_sig");
 
 
         SC_THREAD(control);
@@ -71,7 +75,7 @@ SC_MODULE(FFT_TB) {
     // Control thread that generates input stimuli.
     // Drives the input signals through various standard DSP test cases.
     void control() {
-        int wait_for = N*5;
+        int wait_for = N * 5 * fft->alu_cycles;
         rst.write(true);
         in_valid.write(false);
         wait(5);
@@ -83,7 +87,9 @@ SC_MODULE(FFT_TB) {
         for (int i=0; i<N; i++) {
             in_data.write(complex_t(i==0 ? 1 : 0, 0));
             in_valid.write(true);
-            wait();
+            do {
+                wait();
+            } while (!pipeline_step_sig.read());
         }
         in_valid.write(false);
 
@@ -95,7 +101,9 @@ SC_MODULE(FFT_TB) {
         for (int i=0; i<N; i++) {
             in_data.write(complex_t(1, 0));
             in_valid.write(true);
-            wait();
+            do {
+                wait();
+            } while (!pipeline_step_sig.read());
         }
         in_valid.write(false);
 
@@ -107,7 +115,9 @@ SC_MODULE(FFT_TB) {
         for (int i=0; i<N; i++) {
             in_data.write(complex_t(i%2 == 0 ? 1 : -1, 0));
             in_valid.write(true);
-            wait();
+            do {
+                wait();
+            } while (!pipeline_step_sig.read());
         }
         in_valid.write(false);
 
@@ -119,12 +129,16 @@ SC_MODULE(FFT_TB) {
         for (int i=0; i<N; i++) {
             in_data.write(complex_t(i==0 ? 2 : 0, 0));
             in_valid.write(true);
-            wait();
+            do {
+                wait();
+            } while (!pipeline_step_sig.read());
         }
         for (int i=0; i<N; i++) {
             in_data.write(complex_t(i+1, 0));
             in_valid.write(true);
-            wait();
+            do {
+                wait();
+            } while (!pipeline_step_sig.read());
         }
         in_valid.write(false);
 
@@ -136,7 +150,9 @@ SC_MODULE(FFT_TB) {
         for (int i=0; i<N; i++) {
             in_data.write(complex_t(i*7, i*3));
             in_valid.write(true);
-            wait();
+            do {
+                wait();
+            } while (!pipeline_step_sig.read());
         }
         in_valid.write(false);
 
@@ -148,7 +164,7 @@ SC_MODULE(FFT_TB) {
 
 int sc_main(int argc, char* argv[]) {
     // Parameters
-    const int N = 4;      // FFT Size
+    const int N = 8;      // FFT Size
 
     FFT_TB<N> tb("fft_tb");
 

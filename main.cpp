@@ -12,8 +12,8 @@
 int sc_main(int argc, char* argv[]) {
     std::cout << "Starting Interleaved FFT Simulation (Refactored)" << std::endl;
 
-    // Parameters: N=8, Cores=2, Hop=1
-    Testbench<8, 2, 1> tb("tb");
+    // Parameters: N=4, Cores=2, Hop=1, NUM_MULT=4, NUM_ADD=6
+    Testbench<4, 2, 1, 4, 6> tb("tb");
     
     // Run Simulation
     sc_start();
