@@ -9,3 +9,9 @@ test
 
 # Workspace Folder
 .vscode
+
+# Library
+library
+
+# Development
+.devcontainer

@@ -4,7 +4,20 @@ CXX = g++ -g
 
 SYSTEMC_LIB = $(SYSTEMC_HOME)/lib-linux64
 
-CXXFLAGS = -std=c++17 -I$(SYSTEMC_HOME)/include -DSC_ALLOW_DEPRECATED_IEEE_API
+PWD := $(shell pwd)
+SOURCE_DIR = $(if $(subst ./,,$(SOURCE_DIR1)),$(SOURCE_DIR1),$(PWD)/)
+
+INCDIRS := -I$(SOURCE_DIR)
+INCDIRS += -I$(SYSTEMC_HOME)/include -I$(SYSTEMC_HOME)/src
+INCDIRS += -I$(CONNECTIONS_HOME)/include
+INCDIRS += -I$(MATCHLIB_HOME)/cmod/include
+INCDIRS += -I$(BOOST_HOME)/include
+INCDIRS += -I$(RAPIDJSON_HOME)/include
+INCDIRS += -I$(AC_TYPES)/include
+INCDIRS += -I$(AC_SIMUTILS)/include
+INCDIRS += -I$(MATCHLIB_EXAMPLES)/include
+
+CXXFLAGS = -std=c++17 $(INCDIRS) -DSC_ALLOW_DEPRECATED_IEEE_API
 LDFLAGS = -L$(SYSTEMC_LIB) -lsystemc -lm
 
 # Build directory
