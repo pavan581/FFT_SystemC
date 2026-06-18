@@ -47,7 +47,7 @@ Testbench::Testbench(sc_module_name name)
     tb_write_master(mem_write_chans[1]);
 
     tf = sc_create_vcd_trace_file("./out/vcd/dma_trace");
-    tf->set_time_unit(1, SC_NS);
+    tf->set_time_unit(1, SC_PS);
     sc_trace(tf, clk, "clk");
     sc_trace(tf, rst, "rst");
     sc_trace(tf, start, "start");

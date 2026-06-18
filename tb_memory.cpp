@@ -23,7 +23,7 @@ Testbench::Testbench(sc_module_name name)
     tb_write_master(write_chans[0]);
 
     tf = sc_create_vcd_trace_file("./out/vcd/memory_trace");
-    tf->set_time_unit(1, SC_NS);
+    tf->set_time_unit(1, SC_PS);
     sc_trace(tf, clk, "clk");
     sc_trace(tf, rst, "rst");
 
