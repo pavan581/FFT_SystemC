@@ -1,7 +1,3 @@
-// ============================================================================
-// TB_FFT.CPP - Standalone FFT Core Testbench (Official MatchLib version)
-// ============================================================================
-
 #include <systemc.h>
 #include <vector>
 #include <connections/connections.h>
@@ -10,9 +6,9 @@
 using namespace std;
 using namespace Connections;
 
+// Standalone FFT Core Testbench
 template<int N, int NUM_MULT=4, int NUM_ADD=6>
 SC_MODULE(FFT_TB) {
-    // Signals
     sc_clock                clk;
     sc_signal<bool>         rst;
 
@@ -25,7 +21,6 @@ SC_MODULE(FFT_TB) {
     FFT<N, NUM_MULT, NUM_ADD>* fft;
     sc_trace_file* tf;
 
-    // Trace signals for complex data values
     sc_signal<double> trace_in_real;
     sc_signal<double> trace_in_imag;
     sc_signal<double> trace_out_real;
@@ -69,7 +64,7 @@ SC_MODULE(FFT_TB) {
         delete fft;
     }
  
-    // Control thread that generates input stimuli
+    // Generates input sequences to feed the FFT core
     void control() {
         tb_in_port.Reset();
         trace_in_real.write(0.0);
@@ -89,7 +84,7 @@ SC_MODULE(FFT_TB) {
             trace_in_imag.write(val.imag);
             tb_in_port.Push(val);
         }
-        for (int i=0; i<N; i++) { // Flush pipeline (N dummy inputs for block alignment)
+        for (int i=0; i<N; i++) {
             complex_t val(0, 0);
             trace_in_real.write(val.real);
             trace_in_imag.write(val.imag);
@@ -107,7 +102,7 @@ SC_MODULE(FFT_TB) {
             trace_in_imag.write(val.imag);
             tb_in_port.Push(val);
         }
-        for (int i=0; i<N; i++) { // Flush pipeline (N dummy inputs for block alignment)
+        for (int i=0; i<N; i++) {
             complex_t val(0, 0);
             trace_in_real.write(val.real);
             trace_in_imag.write(val.imag);
@@ -125,7 +120,7 @@ SC_MODULE(FFT_TB) {
             trace_in_imag.write(val.imag);
             tb_in_port.Push(val);
         }
-        for (int i=0; i<N; i++) { // Flush pipeline (N dummy inputs for block alignment)
+        for (int i=0; i<N; i++) {
             complex_t val(0, 0);
             trace_in_real.write(val.real);
             trace_in_imag.write(val.imag);
@@ -137,7 +132,7 @@ SC_MODULE(FFT_TB) {
         sc_stop();
     }
  
-    // Monitor thread that captures and logs results
+    // Logs outputs from the FFT core
     void monitor() {
         tb_out_port.Reset();
         trace_out_real.write(0.0);
@@ -146,15 +141,12 @@ SC_MODULE(FFT_TB) {
  
         for (int t = 1; t <= 3; ++t) {
             std::cout << "\n[FFT TB] FFT Results for TEST " << t << ":" << std::endl;
-            // Capture and print the actual N outputs (which come first)
             for (int i = 0; i < N; ++i) {
                 complex_t out_val = tb_out_port.Pop();
                 trace_out_real.write(out_val.real);
                 trace_out_imag.write(out_val.imag);
                 std::cout << "@" << sc_time_stamp() << " FFT Out[" << i << "] = " << out_val << std::endl;
             }
-            
-            // Discard the remaining N trailing dummy/flush outputs of this block
             for (int i = 0; i < N; ++i) {
                 tb_out_port.Pop();
             }
@@ -163,13 +155,9 @@ SC_MODULE(FFT_TB) {
 };
 
 int sc_main(int argc, char* argv[]) {
-    // Parameters
-    const int N = 8;      // FFT Size
-
+    const int N = 8;
     FFT_TB<N> tb("fft_tb");
-
     sc_start();
-
     cout << "FFT Module Simulation Finished." << endl;
     return 0;
 }

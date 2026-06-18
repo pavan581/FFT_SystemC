@@ -1,6 +1,13 @@
-// ============================================================================
-// DMA.H - Direct Memory Access Controller (Official MatchLib version)
-// ============================================================================
+/*
+ * dma.h
+ *
+ * Implements the Direct Memory Access (DMA) controller module.
+ *
+ * The DMA controller manages AXI4 transactional requests to stream inputs from
+ * shared memory to the FFT core, and write computed frequency bins back to memory.
+ * It uses three concurrent SC_THREADs to request read addresses, unpack and pad input
+ * data, and pack and write-back output data.
+ */
 
 #ifndef DMA_H
 #define DMA_H
@@ -16,46 +23,43 @@ using namespace sc_core;
 using namespace axi;
 using namespace Connections;
 
-// ============================================================================
-// DMA Module Definition
-// ============================================================================
+// Direct Memory Access (DMA) controller for driving FFT core data transfers over AXI.
 template<typename AxiCfg, int N_SIZE = 4, int NUM_MULT = 4, int NUM_ADD = 6>
 SC_MODULE(DMA) {
-    // Clock and active-high synchronous reset
     sc_in<bool> clk;
     sc_in<bool> rst;
 
-    // Control Interface
+    // Control interface
     sc_in<bool> start;
     sc_in<sc_uint<AxiCfg::addrWidth>> base_addr;
     sc_in<int> num_samples;
     sc_out<bool> busy;
 
-    // AXI Master Interfaces
+    // AXI Master interfaces
     typename axi4<AxiCfg>::read::template master<Connections::SYN_PORT> mem_read_port;
     typename axi4<AxiCfg>::write::template master<Connections::SYN_PORT> mem_write_port;
 
-    // Internal Connections Interfaces to FFT
+    // Connections interfaces to the FFT core
     Out<complex_t> fft_out;
     In<complex_t> fft_in;
 
-    // AXI Payloads Typenames
     typedef typename axi4<AxiCfg>::AddrPayload AddrPayload;
     typedef typename axi4<AxiCfg>::ReadPayload ReadPayload;
     typedef typename axi4<AxiCfg>::WritePayload WritePayload;
     typedef typename axi4<AxiCfg>::WRespPayload WRespPayload;
 
-    // Payload Helper Functions
+    // Helper to build AXI address requests
     AddrPayload create_addr_req(sc_uint<AxiCfg::addrWidth> addr, int len) {
         AddrPayload req;
         req.addr = addr;
         req.id = 0;
         req.len = len;
         req.size = AxiCfg::dataWidth == 64 ? 3 : 2;
-        req.burst = 1; // INCR
+        req.burst = 1; // INCR burst
         return req;
     }
 
+    // Helper to build AXI write data payloads
     WritePayload create_write_payload(sc_uint<AxiCfg::dataWidth> data, bool last) {
         WritePayload w_pay;
         w_pay.data = data;
@@ -64,7 +68,7 @@ SC_MODULE(DMA) {
         return w_pay;
     }
 
-    // Calculates total pipeline delay / latency based on size and ALU constraints
+    // Calculates overall FFT pipeline latency under given ALU resource constraints
     static int calc_pipeline_latency() {
         int num_stages = (int)std::log2(N_SIZE);
         int total_latency = 0;
@@ -94,18 +98,16 @@ SC_MODULE(DMA) {
                 mem_read_port.ar.Push(req);
             }
             
-            // Wait for busy to deassert before listening for next start
             while (busy.read()) {
                 wait();
             }
-            
             while (start.read()) {
                 wait();
             }
         }
     }
 
-    // Thread 2: Receives AXI read data on R channel and pushes to FFT, flushing at end
+    // Thread 2: Receives AXI read data, unpacks it, and streams to FFT
     void read_data_thread() {
         mem_read_port.r.Reset();
         fft_out.Reset();
@@ -122,28 +124,14 @@ SC_MODULE(DMA) {
                 int total_inputs = ((total + latency + N_SIZE - 1) / N_SIZE) * N_SIZE;
                 int flush_inputs_to_push = total_inputs - total;
                 
-                // Push real samples
+                // Read and unpack samples from memory
                 for (int i = 0; i < total; ++i) {
                     ReadPayload resp = mem_read_port.r.Pop();
-                    
-                    double real_part, imag_part;
-                    static const int HALF_WIDTH = AxiCfg::dataWidth / 2;
-                    if (AxiCfg::dataWidth == 64) {
-                        int r_int = resp.data.range(AxiCfg::dataWidth - 1, HALF_WIDTH).to_int();
-                        int i_int = resp.data.range(HALF_WIDTH - 1, 0).to_int();
-                        real_part = (double)r_int;
-                        imag_part = (double)i_int;
-                    } else {
-                        int r_int = resp.data.range(AxiCfg::dataWidth - 1, 0).to_int();
-                        real_part = (double)r_int;
-                        imag_part = 0.0;
-                    }
-                    
-                    complex_t sample(real_part, imag_part);
+                    complex_t sample = unpack_complex<AxiCfg>(resp.data);
                     fft_out.Push(sample);
                 }
                 
-                // Push flush samples to clear the pipeline to a block boundary
+                // Push trailing zeros to flush pipeline to block boundary
                 for (int i = 0; i < flush_inputs_to_push; ++i) {
                     fft_out.Push(complex_t(0.0, 0.0));
                 }
@@ -155,7 +143,7 @@ SC_MODULE(DMA) {
         }
     }
 
-    // Thread 3: Collects FFT results, writes real outputs back, and discards flush outputs
+    // Thread 3: Collects FFT results, packs and writes them back over AXI, and discards flush samples
     void write_thread() {
         mem_write_port.aw.Reset();
         mem_write_port.w.Reset();
@@ -172,40 +160,29 @@ SC_MODULE(DMA) {
             
             int total = num_samples.read();
             if (total > 0) {
-                static const int HALF_WIDTH = AxiCfg::dataWidth / 2;
                 int latency = calc_pipeline_latency();
                 int total_inputs = ((total + latency + N_SIZE - 1) / N_SIZE) * N_SIZE;
                 int flush_outputs_to_discard = total_inputs - total;
                 sc_uint<AxiCfg::addrWidth> addr = base_addr.read() + N_SIZE;
                 
-                // Push single AW address payload for the write burst
+                // Address handshake for the write burst
                 AddrPayload aw_pay = create_addr_req(addr, total - 1);
                 mem_write_port.aw.Push(aw_pay);
                 
-                // Write real outputs to memory (first 'total' outputs are the valid ones)
+                // Write active samples back to memory
                 for (int i = 0; i < total; ++i) {
                     complex_t out_val = fft_in.Pop();
-                    
-                    sc_int<32> r_sc = (int)std::round(out_val.real);
-                    sc_int<32> i_sc = (int)std::round(out_val.imag);
-                    sc_uint<AxiCfg::dataWidth> packed = 0;
-                    if (AxiCfg::dataWidth == 64) {
-                        packed.range(AxiCfg::dataWidth - 1, HALF_WIDTH) = r_sc;
-                        packed.range(HALF_WIDTH - 1, 0) = i_sc;
-                    } else {
-                        packed = r_sc;
-                    }
-                    
+                    sc_uint<AxiCfg::dataWidth> packed = pack_complex<AxiCfg>(out_val);
                     WritePayload w_pay = create_write_payload(packed, i == total - 1);
                     mem_write_port.w.Push(w_pay);
                 }
                 
-                // Discard trailing flush/dummy outputs
+                // Pop and discard trailing pipeline flush outputs
                 for (int i = 0; i < flush_outputs_to_discard; ++i) {
                     fft_in.Pop();
                 }
                 
-                // Pop single write response for the entire burst
+                // Receive write response
                 mem_write_port.b.Pop();
             }
             

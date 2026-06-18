@@ -1,6 +1,14 @@
-// ============================================================================
-// STAGE.H - FFT Pipeline Stage Module (Connections / SC_THREAD version)
-// ============================================================================
+/*
+ * stage.h
+ *
+ * Implements a single processing stage in the radix-2 Decimation-In-Frequency (DIF)
+ * FFT computation pipeline.
+ *
+ * Each stage operates in a two-phase loop: storing the first half of the block into
+ * a feedback delay buffer, and performing butterfly additions and subtractions 
+ * with the second half. Twiddle factors are precomputed at construction time and
+ * stored in a vector lookup table to avoid runtime trigonometric execution overhead.
+ */
 
 #ifndef STAGE_H
 #define STAGE_H
@@ -12,9 +20,7 @@
 
 using namespace Connections;
 
-// ============================================================================
-// StageBase Abstract Class
-// ============================================================================
+// Abstract base class for all FFT pipeline stages.
 class StageBase : public sc_module {
 public:
     StageBase(sc_module_name name) : sc_module(name) {}
@@ -23,9 +29,7 @@ public:
     virtual Out<complex_t>& get_out_port() = 0;
 };
 
-// ============================================================================
-// Templated Stage Class
-// ============================================================================
+// A single pipeline stage of the Decimation-in-Frequency FFT.
 template<int N_STAGE>
 class Stage : public StageBase {
 public:
@@ -42,19 +46,14 @@ public:
     int alu_cycles;
     
     std::vector<complex_t> buf;
+    std::vector<complex_t> twiddles;
     bool has_valid_diffs;
-    
-    complex_t get_twiddle(int k, int n) {
-        const double PI = 3.14159265358979323846;
-        double angle = -2.0 * PI * k / n;
-        return complex_t(cos(angle), sin(angle));
-    }
     
     void stage_thread() {
         in_data.Reset();
         out_data.Reset();
         
-        // Clear internal feedback buffers on reset
+        // Initialize delay buffer
         for (int i = 0; i < delay_len; ++i) {
             buf[i] = complex_t(0.0, 0.0);
         }
@@ -64,6 +63,7 @@ public:
         
         while (true) {
             // Phase 1: Store & Forward
+            // Buffer incoming inputs while pushing out stored differences
             for (int c = 0; c < delay_len; ++c) {
                 complex_t input = in_data.Pop();
                 
@@ -76,13 +76,15 @@ public:
             }
             
             // Phase 2: Compute
+            // Perform butterfly calculation on the second half of the inputs
             for (int k = 0; k < delay_len; ++k) {
                 complex_t val_b = in_data.Pop();
                 complex_t val_a = buf[k];
                 
-                complex_t w = get_twiddle(k, N_STAGE);
+                // Retrieve precomputed twiddle factor
+                complex_t w = twiddles[k];
                 
-                // Model multi-cycle butterfly math computation latency
+                // Model multi-cycle butterfly latency
                 if (alu_cycles > 1) {
                     wait(alu_cycles - 1);
                 }
@@ -97,9 +99,10 @@ public:
         }
     }
     
+    // Calculates butterfly execution cycles based on available hardware units.
     static int calc_latency(int n_mult, int n_add) {
         if (n_mult >= 4 && n_add >= 6) {
-            return 1; // Single-cycle execution
+            return 1; // Single-cycle butterfly
         } else {
             int adds1 = (4 + n_add - 1) / n_add;
             int mults = (4 + n_mult - 1) / n_mult;
@@ -120,6 +123,14 @@ public:
         has_valid_diffs(false)
     {
         alu_cycles = calc_latency(n_mult, n_add);
+        
+        // Precalculate twiddle factors to avoid runtime cos/sin overhead
+        twiddles.resize(delay_len);
+        const double PI = 3.14159265358979323846;
+        for (int k = 0; k < delay_len; ++k) {
+            double angle = -2.0 * PI * k / N_STAGE;
+            twiddles[k] = complex_t(cos(angle), sin(angle));
+        }
         
         SC_THREAD(stage_thread);
         sensitive << clk.pos();

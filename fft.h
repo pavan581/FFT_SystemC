@@ -1,6 +1,12 @@
-// ============================================================================
-// FFT.H - Top-Level Pipelined FFT Module (Connections / SC_THREAD version)
-// ============================================================================
+/*
+ * fft.h
+ *
+ * Implements the N-point Fast Fourier Transform (FFT) core cascade.
+ *
+ * It dynamically instantiates log2(N) serial pipeline stages using a recursive
+ * helper structure ('StageInstantiator') and routes internal Combinational channels
+ * between adjacent stages to implement the complete DIF processing pipeline.
+ */
 
 #ifndef FFT_H
 #define FFT_H
@@ -13,9 +19,7 @@
 
 using namespace Connections;
 
-// ============================================================================
-// StageInstantiator - Recursive Helper Struct
-// ============================================================================
+// Helper template to recursively instantiate FFT stages.
 template<int STAGE_SIZE, int NUM_MULT, int NUM_ADD>
 struct StageInstantiator {
     static void instantiate(std::vector<StageBase*>& stages,
@@ -24,7 +28,7 @@ struct StageInstantiator {
                             sc_in<bool>& clk,
                             sc_in<bool>& rst) {
         std::string s_name = "stage_" + std::to_string(index);
-        Stage<STAGE_SIZE>* stage = new Stage<STAGE_SIZE>(s_name.c_str(), NUM_MULT, NUM_ADD);
+        auto* stage = new Stage<STAGE_SIZE>(s_name.c_str(), NUM_MULT, NUM_ADD);
         stage->clk(clk);
         stage->rst(rst);
         stages.push_back(stage);
@@ -34,7 +38,6 @@ struct StageInstantiator {
             auto* chan = new Combinational<complex_t>(sig_name.c_str());
             stage_signals.push_back(chan);
             
-            // Connect output of current stage to channel
             stage->out_data(*chan);
             
             // Recurse to instantiate the next stage
@@ -45,7 +48,7 @@ struct StageInstantiator {
     }
 };
 
-// Base case specialization for N_STAGE = 2
+// Base case for recursion (FFT stage of size 2).
 template<int NUM_MULT, int NUM_ADD>
 struct StageInstantiator<2, NUM_MULT, NUM_ADD> {
     static void instantiate(std::vector<StageBase*>& stages,
@@ -54,16 +57,14 @@ struct StageInstantiator<2, NUM_MULT, NUM_ADD> {
                             sc_in<bool>& clk,
                             sc_in<bool>& rst) {
         std::string s_name = "stage_" + std::to_string(index);
-        Stage<2>* stage = new Stage<2>(s_name.c_str(), NUM_MULT, NUM_ADD);
+        auto* stage = new Stage<2>(s_name.c_str(), NUM_MULT, NUM_ADD);
         stage->clk(clk);
         stage->rst(rst);
         stages.push_back(stage);
     }
 };
 
-// ============================================================================
-// FFT Top Module
-// ============================================================================
+// Top-level FFT processor module.
 template<int N, int NUM_MULT=4, int NUM_ADD=6>
 SC_MODULE(FFT) {
     sc_in<bool> clk;
@@ -76,7 +77,7 @@ SC_MODULE(FFT) {
     std::vector<Combinational<complex_t>*> stage_signals;
     
     SC_CTOR(FFT) {
-        // Instantiate stages recursively
+        // Instantiate the cascade of stages recursively
         StageInstantiator<N, NUM_MULT, NUM_ADD>::instantiate(stages, stage_signals, 0, clk, rst);
         
         // Connect stages in series
@@ -87,7 +88,6 @@ SC_MODULE(FFT) {
                 stages[i]->get_in_port()(*stage_signals[i-1]);
             }
         }
-        // Connect final stage output to top module output
         stages.back()->get_out_port()(out_data);
     }
     

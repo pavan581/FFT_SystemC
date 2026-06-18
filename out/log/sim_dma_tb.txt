@@ -1,0 +1,603 @@
+
+Info: (I703) tracing timescale unit set: 1 ns (./out/vcd/dma_trace.vcd)
+Connections Clock: tb_dma.clk Period: 10 ns
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 10 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 50 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 9990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 10010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 19990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 20010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 29990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 30010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 39990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+[DMA TB] Initializing source memory slots...
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 40010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 49990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 50010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 59990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 60010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 69990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 70010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 79990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 80010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 89990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 90010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 99990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 100010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 109990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 110010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 119990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 120010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 129990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 130010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 139990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 140010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 149990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 150010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 159990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 160010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 169990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 170010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 179990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 180010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 189990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 190010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 199990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 200010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 209990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 210010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 219990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 220010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 229990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 230010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 239990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 240010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 249990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 250010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 259990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 260010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 269990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 270010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 279990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 280010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 289990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+[DMA TB] Launching DMA Transfer (Base: 0, Len: 4)...
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 290010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 299990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 300010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 309990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 310010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 319990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 320010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 329990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+[DMA TB] Received from DMA: real{0} imag{0}  @ 330 ns
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 330010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 339990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+[DMA TB] Received from DMA: real{1} imag{0}  @ 340 ns
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 340010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 349990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+[DMA TB] Received from DMA: real{2} imag{0}  @ 350 ns
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 350010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 359990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+[DMA TB] Received from DMA: real{3} imag{0}  @ 360 ns
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 360010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 369990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+[DMA TB] Received from DMA: real{0} imag{0}  @ 370 ns
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 370010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 379990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+[DMA TB] Received from DMA: real{0} imag{0}  @ 380 ns
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 380010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 389990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+[DMA TB] Received from DMA: real{0} imag{0}  @ 390 ns
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 390010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 399990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+[DMA TB] Received from DMA: real{0} imag{0}  @ 400 ns
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 400010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 409990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 410010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 419990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 420010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 429990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 430010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 439990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 440010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 449990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 450010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 459990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 460010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 469990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 470010 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+
+Warning: (W713) current kernel time is not representable in VCD time units: 
+	Current kernel time is 479990 ps
+	VCD trace time unit is 1 ns
+	Use 'tracefile->set_time_unit(double, sc_time_unit);' to increase the time resolution.
+In file: ../../../src/sysc/tracing/sc_vcd_trace.cpp:2020
+[DMA TB] Verifying memory write-back (offset by N=4)...
+  Addr[4] = real{100} imag{0}  [OK]
+  Addr[5] = real{101} imag{0}  [OK]
+  Addr[6] = real{102} imag{0}  [OK]
+  Addr[7] = real{103} imag{0}  [OK]
+[DMA TB] DMA VERIFICATION PASSED.
+
+Info: /OSCI/SystemC: Simulation stopped by user.

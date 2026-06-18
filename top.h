@@ -1,6 +1,13 @@
-// ============================================================================
-// TOP_FFT.H - Top-Level Wrapper Module (Official MatchLib version)
-// ============================================================================
+/*
+ * top.h
+ *
+ * Coordinates the multi-core interleaved FFT execution.
+ *
+ * It instantiates an array of 'Core' modules, each combining a DMA and an FFT core,
+ * and routes their read/write ports to the top-level. A central staggering control 
+ * state machine launches the cores sequentially using the configured 'HOP_SIZE' delay,
+ * reducing peak bandwidth and enabling temporally interleaved multi-core operation.
+ */
 
 #ifndef TOP_FFT_H
 #define TOP_FFT_H
@@ -13,33 +20,27 @@
 using namespace sc_core;
 using namespace axi;
 
-// ============================================================================
-// Top Wrapper Module Definition
-// ============================================================================
+// Top wrapper module coordinating multiple FFT processing cores with staggered execution.
 template<int N_SIZE, int NUM_CORES, int HOP_SIZE, typename AxiCfg, int NUM_MULT=4, int NUM_ADD=6>
 SC_MODULE(Top) {
-    // Clock and active-high synchronous reset
     sc_in<bool> clk;
     sc_in<bool> rst;
-    
-    // Global start trigger
     sc_in<bool> start;
 
-    // Top-Level AXI Read and Write Interfaces
+    // External AXI ports for memory access
     sc_vector<typename axi4<AxiCfg>::read::template master<Connections::SYN_PORT>> mem_read_ports;
     sc_vector<typename axi4<AxiCfg>::write::template master<Connections::SYN_PORT>> mem_write_ports;
     
     sc_vector<sc_in<sc_uint<AxiCfg::addrWidth>>> base_addrs;
     sc_vector<sc_in<int>> num_samples; 
 
-    // Internal signals for staggered start
+    // Inter-core control signals
     sc_vector<sc_signal<bool>> core_starts;
     sc_vector<sc_signal<bool>> core_busy;
 
-    // Core Module Instantiations
     sc_vector<Core<N_SIZE, AxiCfg, NUM_MULT, NUM_ADD>> cores;
 
-    // Stagger Logic FSM State
+    // Stagger logic state signals
     sc_signal<bool> active_stagger;
     sc_signal<int> stagger_counter;
 
@@ -71,7 +72,7 @@ SC_MODULE(Top) {
         sensitive << clk.pos();
     }
 
-    // Coordinates the staggered start of each core pair using the hop delay
+    // Handles staggering of core launches to balance bus utilization
     void control_logic() {
         if (rst.read()) {
             active_stagger.write(false);
@@ -83,7 +84,6 @@ SC_MODULE(Top) {
             bool is_active = active_stagger.read();
             int cnt = stagger_counter.read();
 
-            // Detect start pulse
             if (start.read() && !is_active) {
                 is_active = true;
                 cnt = 0;
@@ -99,7 +99,6 @@ SC_MODULE(Top) {
                         core_starts[i].write(false);
                     }
                 }
-                
                 stagger_counter.write(cnt + 1);
                 
                 if (cnt > NUM_CORES * HOP_SIZE + 2) {

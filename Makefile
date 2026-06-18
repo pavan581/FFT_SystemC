@@ -73,8 +73,9 @@ clean:
 	@echo "Clean complete!"
 
 # Phony targets
-.PHONY: all clean
-# Target for FFT Testbench
+.PHONY: all clean run run_fft_tb run_mem_tb run_dma_tb
+
+# FFT Testbench
 FFT_TB_SRCS = tb_fft.cpp
 FFT_TB_OBJS = $(addprefix $(BUILD_DIR)/, $(FFT_TB_SRCS:.cpp=.o))
 FFT_TB_TARGET = $(BUILD_DIR)/tb_fft
@@ -89,4 +90,36 @@ run_fft_tb: $(FFT_TB_TARGET) $(OUT_DIR)
 	@echo "Output will be saved to: $(OUT_DIR)/log/sim_fft_tb.txt"
 	@echo ""
 	@$(FFT_TB_TARGET) | tee $(OUT_DIR)/log/sim_fft_tb.txt
+
+# Memory Testbench
+MEM_TB_SRCS = tb_memory.cpp
+MEM_TB_OBJS = $(addprefix $(BUILD_DIR)/, $(MEM_TB_SRCS:.cpp=.o))
+MEM_TB_TARGET = $(BUILD_DIR)/tb_memory
+
+$(MEM_TB_TARGET): $(BUILD_DIR) $(MEM_TB_OBJS)
+	@echo "Linking $(MEM_TB_TARGET)..."
+	$(CXX) $(MEM_TB_OBJS) $(LDFLAGS) -o $(MEM_TB_TARGET)
+	@echo "Build successful!"
+
+run_mem_tb: $(MEM_TB_TARGET) $(OUT_DIR)
+	@echo "Running Memory testbench..."
+	@echo "Output will be saved to: $(OUT_DIR)/log/sim_mem_tb.txt"
+	@echo ""
+	@$(MEM_TB_TARGET) | tee $(OUT_DIR)/log/sim_mem_tb.txt
+
+# DMA Testbench
+DMA_TB_SRCS = tb_dma.cpp
+DMA_TB_OBJS = $(addprefix $(BUILD_DIR)/, $(DMA_TB_SRCS:.cpp=.o))
+DMA_TB_TARGET = $(BUILD_DIR)/tb_dma
+
+$(DMA_TB_TARGET): $(BUILD_DIR) $(DMA_TB_OBJS)
+	@echo "Linking $(DMA_TB_TARGET)..."
+	$(CXX) $(DMA_TB_OBJS) $(LDFLAGS) -o $(DMA_TB_TARGET)
+	@echo "Build successful!"
+
+run_dma_tb: $(DMA_TB_TARGET) $(OUT_DIR)
+	@echo "Running DMA testbench..."
+	@echo "Output will be saved to: $(OUT_DIR)/log/sim_dma_tb.txt"
+	@echo ""
+	@$(DMA_TB_TARGET) | tee $(OUT_DIR)/log/sim_dma_tb.txt
 

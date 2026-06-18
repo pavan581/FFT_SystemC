@@ -1,7 +1,3 @@
-// ============================================================================
-// TB_INTERLEAVED_FFT.H - Top-Level System Testbench (Official MatchLib version)
-// ============================================================================
-
 #ifndef TESTBENCH_H
 #define TESTBENCH_H
 
@@ -23,14 +19,9 @@ using namespace sc_core;
 using namespace axi;
 using namespace Connections;
 
-// ============================================================================
-// AXI4 Configuration Struct
-// ============================================================================
 typedef axi::cfg::standard AxiCfg;
 
-// ============================================================================
-// Testbench Module Definition
-// ============================================================================
+// Top-level testbench for verifying the Multi-Core Interleaved FFT system.
 template<int N, int NUM_CORES, int HOP, int NUM_MULT=4, int NUM_ADD=6>
 SC_MODULE(Testbench) {
     sc_clock clk;
@@ -41,17 +32,17 @@ SC_MODULE(Testbench) {
     static const int ADDR_WIDTH  = AxiCfg::addrWidth;
     static const int DATA_WIDTH  = AxiCfg::dataWidth;
     
-    // Multi-port AXI Memory
+    // Shared Multi-Port Memory
     Memory<NUM_CORES + 1, NUM_CORES, MEM_DEPTH, AxiCfg>* mem;
     
-    // AXI read/write channels
+    // Read and Write channels connecting Memory and Cores
     sc_vector<typename axi4<AxiCfg>::read::template chan<Connections::SYN_PORT>> mem_read_chans;
     sc_vector<typename axi4<AxiCfg>::write::template chan<Connections::SYN_PORT>> mem_write_chans;
 
-    // AXI Write Master for initialization
+    // AXI Write Master for initializing shared memory
     typename axi4<AxiCfg>::write::template master<Connections::SYN_PORT> tb_write_master;
 
-    // Top Module
+    // DUT
     Top<N, NUM_CORES, HOP, AxiCfg, NUM_MULT, NUM_ADD>* fft_sys;
     
     sc_signal<bool> start_signal;
@@ -61,10 +52,9 @@ SC_MODULE(Testbench) {
     
     sc_trace_file* tf;
     
-    // Standalone AXI Monitor
     Monitor<NUM_CORES, N, AxiCfg>* monitor;
 
-    // Unpacked trace signals for easy waveform verification
+    // Tracing signals for VCD output
     sc_signal<unsigned int>* trace_ar_addr;
     sc_signal<double>* trace_r_real;
     sc_signal<double>* trace_r_imag;
@@ -86,48 +76,44 @@ SC_MODULE(Testbench) {
         trace_aw_addr = new sc_signal<unsigned int>[NUM_CORES];
         trace_w_real = new sc_signal<double>[NUM_CORES];
         trace_w_imag = new sc_signal<double>[NUM_CORES];
-        // 1. Create and Connect Memory
+
+        // 1. Memory instantiation
         mem = new Memory<NUM_CORES + 1, NUM_CORES, MEM_DEPTH, AxiCfg>("shared_mem");
         mem->clk(clk);
         mem->rst(rst);
-        
         mem->read_ports(mem_read_chans);
         mem->write_ports(mem_write_chans);
 
-        // 2. Create and Connect FFT System
+        // 2. FFT Core complex instantiation
         fft_sys = new Top<N, NUM_CORES, HOP, AxiCfg, NUM_MULT, NUM_ADD>("fft_sys");
         fft_sys->clk(clk);
         fft_sys->rst(rst);
         fft_sys->start(start_signal);
-        
         fft_sys->mem_read_ports(mem_read_chans);
         for(int i=0; i<NUM_CORES; i++) {
             fft_sys->mem_write_ports[i](mem_write_chans[i]);
         }
-        
         fft_sys->base_addrs(base_addrs);
         fft_sys->num_samples(num_samples);
 
-        // Bind TB write master for initialization
+        // Connect the TB write port to initialization slot in Memory
         tb_write_master(mem_write_chans[NUM_CORES]);
 
-        // Instantiate and connect Monitor
+        // 3. Monitor instantiation
         monitor = new Monitor<NUM_CORES, N, AxiCfg>("monitor", mem_read_chans, mem_write_chans, base_addrs);
         monitor->clk(clk);
         monitor->rst(rst);
 
-        // Source thread for driving test stimulus
         SC_THREAD(source_thread);
         sensitive << clk.posedge_event();
 
         SC_METHOD(cycle_counter);
         sensitive << clk.posedge_event();
 
-        // Unpack method for tracing AXI payloads
         SC_METHOD(trace_unpack_process);
         sensitive << clk.posedge_event();
 
-        // 3. Trace Setup
+        // 4. Trace configurations
         std::string trace_name = "./out/vcd/InterleavedFFT-DMA_N" + std::to_string(N) + "_C" + std::to_string(NUM_CORES) + "_H" + std::to_string(HOP) + "_M" + std::to_string(NUM_MULT) + "_A" + std::to_string(NUM_ADD) + "_axi";
         tf = sc_create_vcd_trace_file(trace_name.c_str());
         tf->set_time_unit(1, SC_PS);
@@ -185,11 +171,9 @@ SC_MODULE(Testbench) {
         cycle_count.write(cycle_cnt++);
     }
 
-    // Unpack process that writes raw bits to separate real/imag/addr signals for wave tracing
+    // Deconstructs packed AXI signals into separate channels for waveforms
     void trace_unpack_process() {
-        static const int HALF_WIDTH = AxiCfg::dataWidth / 2;
         for (int i = 0; i < NUM_CORES; ++i) {
-            // Unpack Read Address (AR)
             if (mem_read_chans[i].ar.val.read()) {
                 auto ar_pay = BitsToType<typename axi4<AxiCfg>::AddrPayload>(mem_read_chans[i].ar.msg.read());
                 trace_ar_addr[i].write(ar_pay.addr.to_uint());
@@ -197,26 +181,16 @@ SC_MODULE(Testbench) {
                 trace_ar_addr[i].write(0);
             }
 
-            // Unpack Read Data (R)
             if (mem_read_chans[i].r.val.read()) {
                 auto r_pay = BitsToType<typename axi4<AxiCfg>::ReadPayload>(mem_read_chans[i].r.msg.read());
-                sc_uint<AxiCfg::dataWidth> raw = r_pay.data;
-                if (AxiCfg::dataWidth == 64) {
-                    int r_int = raw.range(AxiCfg::dataWidth - 1, HALF_WIDTH).to_int();
-                    int i_int = raw.range(HALF_WIDTH - 1, 0).to_int();
-                    trace_r_real[i].write((double)r_int);
-                    trace_r_imag[i].write((double)i_int);
-                } else {
-                    int r_int = raw.range(AxiCfg::dataWidth - 1, 0).to_int();
-                    trace_r_real[i].write((double)r_int);
-                    trace_r_imag[i].write(0.0);
-                }
+                complex_t val = unpack_complex<AxiCfg>(r_pay.data);
+                trace_r_real[i].write(val.real);
+                trace_r_imag[i].write(val.imag);
             } else {
                 trace_r_real[i].write(0.0);
                 trace_r_imag[i].write(0.0);
             }
 
-            // Unpack Write Address (AW)
             if (mem_write_chans[i].aw.val.read()) {
                 auto aw_pay = BitsToType<typename axi4<AxiCfg>::AddrPayload>(mem_write_chans[i].aw.msg.read());
                 trace_aw_addr[i].write(aw_pay.addr.to_uint());
@@ -224,20 +198,11 @@ SC_MODULE(Testbench) {
                 trace_aw_addr[i].write(0);
             }
 
-            // Unpack Write Data (W)
             if (mem_write_chans[i].w.val.read()) {
                 auto w_pay = BitsToType<typename axi4<AxiCfg>::WritePayload>(mem_write_chans[i].w.msg.read());
-                sc_uint<AxiCfg::dataWidth> raw = w_pay.data;
-                if (AxiCfg::dataWidth == 64) {
-                    int r_int = raw.range(AxiCfg::dataWidth - 1, HALF_WIDTH).to_int();
-                    int i_int = raw.range(HALF_WIDTH - 1, 0).to_int();
-                    trace_w_real[i].write((double)r_int);
-                    trace_w_imag[i].write((double)i_int);
-                } else {
-                    int r_int = raw.range(AxiCfg::dataWidth - 1, 0).to_int();
-                    trace_w_real[i].write((double)r_int);
-                    trace_w_imag[i].write(0.0);
-                }
+                complex_t val = unpack_complex<AxiCfg>(w_pay.data);
+                trace_w_real[i].write(val.real);
+                trace_w_imag[i].write(val.imag);
             } else {
                 trace_w_real[i].write(0.0);
                 trace_w_imag[i].write(0.0);
@@ -245,29 +210,14 @@ SC_MODULE(Testbench) {
         }
     }
 
-
-
-    // Unpacker helper for complex variables
-    complex_t unpack_complex(sc_uint<AxiCfg::dataWidth> raw) {
-        static const int HALF_WIDTH = AxiCfg::dataWidth / 2;
-        if (AxiCfg::dataWidth == 64) {
-            int r_int = raw.range(AxiCfg::dataWidth - 1, HALF_WIDTH).to_int();
-            int i_int = raw.range(HALF_WIDTH - 1, 0).to_int();
-            return complex_t((double)r_int, (double)i_int);
-        } else {
-            int r_int = raw.range(AxiCfg::dataWidth - 1, 0).to_int();
-            return complex_t((double)r_int, 0.0);
-        }
-    }
-
-    // Helper to perform an AXI Write Handshake
+    // Helper to perform memory writes from the testbench
     void axi_write(unsigned int addr, sc_uint<AxiCfg::dataWidth> data) {
         typename axi4<AxiCfg>::AddrPayload aw_pay;
         aw_pay.addr = addr;
         aw_pay.id = 0;
         aw_pay.len = 0;
         aw_pay.size = (AxiCfg::dataWidth == 64) ? 3 : 2;
-        aw_pay.burst = 1; // INCR
+        aw_pay.burst = 1;
         
         typename axi4<AxiCfg>::WritePayload w_pay;
         w_pay.data = data;
@@ -277,7 +227,7 @@ SC_MODULE(Testbench) {
         tb_write_master.write(aw_pay, w_pay);
     }
 
-    // Mathematical verification helper
+    // Verification reference DFT model
     std::vector<complex_t> compute_dft(const std::vector<complex_t>& input) {
         int size = input.size();
         std::vector<complex_t> output(size);
@@ -304,21 +254,20 @@ SC_MODULE(Testbench) {
         return rev;
     }
 
+    // Verification check comparing actual memory contents against expected DFT results
     bool verify_fft_output(int core_idx, int start_addr, int len) {
         int aligned_len = ((len + N - 1) / N) * N;
         
-        // Read inputs from memory, padding with zeros up to aligned block boundary
         std::vector<complex_t> inputs(aligned_len);
         for (int i = 0; i < aligned_len; ++i) {
             if (i < len) {
                 sc_uint<AxiCfg::dataWidth> raw = mem->mem[start_addr + i];
-                inputs[i] = unpack_complex(raw);
+                inputs[i] = unpack_complex<AxiCfg>(raw);
             } else {
                 inputs[i] = complex_t(0.0, 0.0);
             }
         }
 
-        // Compute golden DFT block by block
         std::vector<complex_t> expected(aligned_len);
         int num_blocks = aligned_len / N;
         int bits = (int)std::log2(N);
@@ -334,12 +283,11 @@ SC_MODULE(Testbench) {
             }
         }
 
-        // Compare with memory outputs starting at start_addr + N
         bool pass = true;
         std::cout << "Core " << core_idx << " Verification (Base Addr: " << start_addr + N << "):" << std::endl;
         for (int i = 0; i < len; ++i) {
             sc_uint<AxiCfg::dataWidth> raw = mem->mem[start_addr + N + i];
-            complex_t actual = unpack_complex(raw);
+            complex_t actual = unpack_complex<AxiCfg>(raw);
             complex_t exp = expected[i];
             
             double diff_real = std::abs(actual.real - exp.real);
@@ -358,7 +306,6 @@ SC_MODULE(Testbench) {
         return pass;
     }
 
-    // Source thread for driving test stimulus
     void source_thread() {
         tb_write_master.reset();
         start_signal.write(false);
@@ -368,7 +315,7 @@ SC_MODULE(Testbench) {
         }
         
         // ====================================================================
-        // TEST CASE 1: Standard Operation (Baseline)
+        // TEST CASE 1: Standard Operation
         // ====================================================================
         std::cout << "\n[TEST 1] Standard Operation (N=" << N << ", Cores=" << NUM_CORES << ")..." << std::endl;
         
@@ -380,7 +327,7 @@ SC_MODULE(Testbench) {
 
         std::cout << "@" << sc_time_stamp() << " Initializing Memory..." << std::endl;
         for (int i = 0; i < NUM_CORES * 2 * N; i++) {
-            axi_write(i, pack_complex((double)i, 0));
+            axi_write(i, pack_complex<AxiCfg>((double)i, 0));
         }
         wait(5);
         
@@ -409,7 +356,7 @@ SC_MODULE(Testbench) {
         std::cout << "[TEST 1] Finished." << std::endl;
 
         // ====================================================================
-        // TEST CASE 2: Consecutive Starts (Restart after completion)
+        // TEST CASE 2: Consecutive Starts
         // ====================================================================
         std::cout << "\n[TEST 2] Consecutive Starts..." << std::endl;
         
@@ -455,7 +402,7 @@ SC_MODULE(Testbench) {
         
         std::cout << "@" << sc_time_stamp() << " Re-initializing Memory after Reset..." << std::endl;
         for (int i = 0; i < NUM_CORES * 2 * N; i++) { 
-            axi_write(i, pack_complex((double)i, (double)i*0.5));
+            axi_write(i, pack_complex<AxiCfg>((double)i, (double)i*0.5));
         }
         wait();
         
@@ -463,7 +410,7 @@ SC_MODULE(Testbench) {
         std::cout << "[TEST 3] Finished." << std::endl;
 
         // ====================================================================
-        // TEST CASE 4: Mid-flight Restart (Stress Test)
+        // TEST CASE 4: Mid-flight Restart
         // ====================================================================
         std::cout << "\n[TEST 4] Mid-flight Restart..." << std::endl;
         
@@ -473,7 +420,7 @@ SC_MODULE(Testbench) {
         
         wait(9); 
         
-        std::cout << "@" << sc_time_stamp() << " Pulsing Start AGAIN (Intrusion)..." << std::endl;
+        std::cout << "@" << sc_time_stamp() << " Pulsing Start AGAIN..." << std::endl;
         start_signal.write(true);
         wait();
         start_signal.write(false);
@@ -493,7 +440,7 @@ SC_MODULE(Testbench) {
 
         std::cout << "@" << sc_time_stamp() << " Re-initializing Memory for Test 5..." << std::endl;
         for (int i = 0; i < (4 + NUM_CORES * 2) * N; i++) {
-            axi_write(i, pack_complex((double)i, (double)i*0.5));
+            axi_write(i, pack_complex<AxiCfg>((double)i, (double)i*0.5));
         }
         wait(5);
 
@@ -532,7 +479,7 @@ SC_MODULE(Testbench) {
 
         std::cout << "@" << sc_time_stamp() << " Re-initializing Memory for Test 6..." << std::endl;
         for (int i = 0; i < NUM_CORES * 2 * N; i++) {
-            axi_write(i, pack_complex((double)i, 0.0));
+            axi_write(i, pack_complex<AxiCfg>((double)i, 0.0));
         }
         wait(5);
 
@@ -561,7 +508,7 @@ SC_MODULE(Testbench) {
         std::cout << "[TEST 6] Finished." << std::endl;
 
         // ====================================================================
-        // TEST CASE 7: Continuous Stream (Overflow Buffer)
+        // TEST CASE 7: Continuous Stream
         // ====================================================================
         std::cout << "\n[TEST 7] Continuous Stream (10 inputs for N=4)..." << std::endl;
         
@@ -572,7 +519,7 @@ SC_MODULE(Testbench) {
 
         std::cout << "@" << sc_time_stamp() << " Initializing Memory for Stream..." << std::endl;
         for (int i = 0; i < 24 * NUM_CORES; i++) {
-            axi_write(i, pack_complex((double)i, (double)i*0.5));
+            axi_write(i, pack_complex<AxiCfg>((double)i, (double)i*0.5));
         }
         wait();
         
@@ -616,28 +563,13 @@ SC_MODULE(Testbench) {
         std::cout << "[TEST 8] Finished." << std::endl;
 
         // ====================================================================
-        // TEST CASE 9: Memory Verification (Done dynamically in tests 1-7)
+        // TEST CASE 9: Memory Verification
         // ====================================================================
         std::cout << "\n[TEST 9] Memory Verification..." << std::endl;
         std::cout << "[TEST 9] Finished." << std::endl;
         
         std::cout << "\n[ALL TESTS FINISHED] @ " << sc_time_stamp() << std::endl;
         sc_stop();
-    }
-
-    // Helper method to pack real and imaginary parts into a word
-    sc_uint<AxiCfg::dataWidth> pack_complex(double r, double i) {
-        static const int HALF_WIDTH = AxiCfg::dataWidth / 2;
-        int r_int = (int)std::round(r);
-        int i_int = (int)std::round(i);
-        sc_uint<AxiCfg::dataWidth> res = 0;
-        if (AxiCfg::dataWidth == 64) {
-            res.range(AxiCfg::dataWidth - 1, HALF_WIDTH) = r_int;
-            res.range(HALF_WIDTH - 1, 0) = i_int;
-        } else {
-            res.range(AxiCfg::dataWidth - 1, 0) = r_int;
-        }
-        return res;
     }
 };
 

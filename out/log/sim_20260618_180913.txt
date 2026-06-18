@@ -1,0 +1,168 @@
+Starting Interleaved FFT Simulation
+
+Info: (I703) tracing timescale unit set: 1 ps (./out/vcd/InterleavedFFT-DMA_N4_C2_H1_M4_A4_axi.vcd)
+Connections Clock: tb.clk Period: 1 ns
+
+[TEST 1] Standard Operation (N=4, Cores=2)...
+@6 ns Initializing Memory...
+@59 ns Triggering Start...
+DEBUG DMA[0] Read Addr: 0 @ 63 ns
+DEBUG DMA[1] Read Addr: 8 @ 63 ns
+@76 ns [Core 0] Out[ 0] = real{6} imag{0} 
+@76 ns [Core 1] Out[ 0] = real{38} imag{0} 
+@77 ns [Core 0] Out[ 1] = real{-2} imag{0} 
+@77 ns [Core 1] Out[ 1] = real{-2} imag{0} 
+@79 ns [Core 0] Out[ 2] = real{-2} imag{2} 
+@79 ns [Core 1] Out[ 2] = real{-2} imag{2} 
+@80 ns [Core 0] Out[ 3] = real{-2} imag{-2} 
+@80 ns [Core 1] Out[ 3] = real{-2} imag{-2} 
+
+Memory Verification...
+Core 0 Verification (Base Addr: 4):
+  Addr[4]: Actual=real{6} imag{0}  Expected=real{6} imag{0}  [OK]
+  Addr[5]: Actual=real{-2} imag{0}  Expected=real{-2} imag{-7.34788e-16}  [OK]
+  Addr[6]: Actual=real{-2} imag{2}  Expected=real{-2} imag{2}  [OK]
+  Addr[7]: Actual=real{-2} imag{-2}  Expected=real{-2} imag{-2}  [OK]
+Core 1 Verification (Base Addr: 12):
+  Addr[12]: Actual=real{38} imag{0}  Expected=real{38} imag{0}  [OK]
+  Addr[13]: Actual=real{-2} imag{0}  Expected=real{-2} imag{-2.69422e-15}  [OK]
+  Addr[14]: Actual=real{-2} imag{2}  Expected=real{-2} imag{2}  [OK]
+  Addr[15]: Actual=real{-2} imag{-2}  Expected=real{-2} imag{-2}  [OK]
+[TEST 1] PASSED.
+[TEST 1] Finished.
+
+[TEST 2] Consecutive Starts...
+@2060 ns Triggering Start (Run 2)...
+
+Memory Verification...
+Core 0 Verification (Base Addr: 4):
+  Addr[4]: Actual=real{6} imag{0}  Expected=real{6} imag{0}  [OK]
+  Addr[5]: Actual=real{-2} imag{0}  Expected=real{-2} imag{-7.34788e-16}  [OK]
+  Addr[6]: Actual=real{-2} imag{2}  Expected=real{-2} imag{2}  [OK]
+  Addr[7]: Actual=real{-2} imag{-2}  Expected=real{-2} imag{-2}  [OK]
+Core 1 Verification (Base Addr: 12):
+  Addr[12]: Actual=real{38} imag{0}  Expected=real{38} imag{0}  [OK]
+  Addr[13]: Actual=real{-2} imag{0}  Expected=real{-2} imag{-2.69422e-15}  [OK]
+  Addr[14]: Actual=real{-2} imag{2}  Expected=real{-2} imag{2}  [OK]
+  Addr[15]: Actual=real{-2} imag{-2}  Expected=real{-2} imag{-2}  [OK]
+[TEST 2] PASSED.
+[TEST 2] Finished.
+
+[TEST 3] Mid-flight Reset...
+@4071 ns Asserting Reset!
+@4073 ns Re-initializing Memory after Reset...
+[TEST 3] Finished.
+
+[TEST 4] Mid-flight Restart...
+@6132 ns Pulsing Start AGAIN...
+@6139 ns [Core 0] Out[ 0] = real{6} imag{4} 
+@6139 ns [Core 1] Out[ 0] = real{38} imag{20} 
+@6140 ns [Core 0] Out[ 1] = real{-2} imag{-2} 
+@6140 ns [Core 1] Out[ 1] = real{-2} imag{-2} 
+@6142 ns [Core 0] Out[ 2] = real{-3} imag{1} 
+@6142 ns [Core 1] Out[ 2] = real{-3} imag{1} 
+@6143 ns [Core 0] Out[ 3] = real{-1} imag{-3} 
+@6143 ns [Core 1] Out[ 3] = real{-1} imag{-3} 
+[TEST 4] Finished.
+
+[TEST 5] Dynamic Reconfiguration...
+@8139 ns Re-initializing Memory for Test 5...
+@8240 ns Triggering Start (New Config)...
+DEBUG DMA[0] Read Addr: 8 @ 8244 ns
+DEBUG DMA[1] Read Addr: 16 @ 8244 ns
+@8257 ns [Core 0] Out[ 0] = real{38} imag{20} 
+@8257 ns [Core 1] Out[ 0] = real{70} imag{36} 
+@8258 ns [Core 0] Out[ 1] = real{-2} imag{-2} 
+@8258 ns [Core 1] Out[ 1] = real{-2} imag{-2} 
+@8260 ns [Core 0] Out[ 2] = real{-3} imag{1} 
+@8260 ns [Core 1] Out[ 2] = real{-3} imag{1} 
+@8261 ns [Core 0] Out[ 3] = real{-1} imag{-3} 
+@8261 ns [Core 1] Out[ 3] = real{-1} imag{-3} 
+
+Memory Verification...
+Core 0 Verification (Base Addr: 12):
+  Addr[12]: Actual=real{38} imag{20}  Expected=real{38} imag{20}  [OK]
+  Addr[13]: Actual=real{-2} imag{-2}  Expected=real{-2} imag{-2}  [OK]
+  Addr[14]: Actual=real{-3} imag{1}  Expected=real{-3} imag{1}  [OK]
+  Addr[15]: Actual=real{-1} imag{-3}  Expected=real{-1} imag{-3}  [OK]
+Core 1 Verification (Base Addr: 20):
+  Addr[20]: Actual=real{70} imag{36}  Expected=real{70} imag{36}  [OK]
+  Addr[21]: Actual=real{-2} imag{-2}  Expected=real{-2} imag{-2}  [OK]
+  Addr[22]: Actual=real{-3} imag{1}  Expected=real{-3} imag{1}  [OK]
+  Addr[23]: Actual=real{-1} imag{-3}  Expected=real{-1} imag{-3}  [OK]
+[TEST 5] PASSED.
+[TEST 5] Finished.
+
+[TEST 6] Partial Input...
+@10247 ns Re-initializing Memory for Test 6...
+@10300 ns Triggering Start (Partial Inputs)...
+DEBUG DMA[0] Read Addr: 0 @ 10304 ns
+DEBUG DMA[1] Read Addr: 8 @ 10304 ns
+@10317 ns [Core 0] Out[ 0] = real{6} imag{0} 
+@10317 ns [Core 1] Out[ 0] = real{17} imag{0} 
+@10318 ns [Core 0] Out[ 1] = real{-2} imag{0} 
+@10318 ns [Core 1] Out[ 1] = real{-1} imag{0} 
+@10320 ns [Core 0] Out[ 2] = real{-2} imag{2} 
+@10321 ns [Core 0] Out[ 3] = real{-2} imag{-2} 
+
+Memory Verification...
+Core 0 Verification (Base Addr: 4):
+  Addr[4]: Actual=real{6} imag{0}  Expected=real{6} imag{0}  [OK]
+  Addr[5]: Actual=real{-2} imag{0}  Expected=real{-2} imag{-7.34788e-16}  [OK]
+  Addr[6]: Actual=real{-2} imag{2}  Expected=real{-2} imag{2}  [OK]
+  Addr[7]: Actual=real{-2} imag{-2}  Expected=real{-2} imag{-2}  [OK]
+Core 1 Verification (Base Addr: 12):
+  Addr[12]: Actual=real{17} imag{0}  Expected=real{17} imag{0}  [OK]
+  Addr[13]: Actual=real{-1} imag{0}  Expected=real{-1} imag{-1.10218e-15}  [OK]
+[TEST 6] PASSED.
+[TEST 6] Finished.
+
+[TEST 7] Continuous Stream (10 inputs for N=4)...
+@12307 ns Initializing Memory for Stream...
+@12452 ns Triggering Start (Continuous Stream)...
+DEBUG DMA[1] Read Addr: 24 @ 12456 ns
+@12469 ns [Core 0] Out[ 0] = real{6} imag{4} 
+@12469 ns [Core 1] Out[ 0] = real{102} imag{52} 
+@12470 ns [Core 0] Out[ 1] = real{-2} imag{-2} 
+@12470 ns [Core 1] Out[ 1] = real{-2} imag{-2} 
+@12472 ns [Core 0] Out[ 2] = real{-3} imag{1} 
+@12472 ns [Core 1] Out[ 2] = real{-3} imag{1} 
+@12473 ns [Core 0] Out[ 3] = real{-1} imag{-3} 
+@12473 ns [Core 1] Out[ 3] = real{-1} imag{-3} 
+@12475 ns [Core 0] Out[ 4] = real{22} imag{12} 
+@12475 ns [Core 1] Out[ 4] = real{118} imag{60} 
+@12476 ns [Core 0] Out[ 5] = real{-2} imag{-2} 
+@12476 ns [Core 1] Out[ 5] = real{-2} imag{-2} 
+@12478 ns [Core 0] Out[ 6] = real{-3} imag{1} 
+@12478 ns [Core 1] Out[ 6] = real{-3} imag{1} 
+@12479 ns [Core 0] Out[ 7] = real{-1} imag{-3} 
+@12479 ns [Core 1] Out[ 7] = real{-1} imag{-3} 
+@12481 ns [Core 0] Out[ 8] = real{17} imag{9} 
+@12481 ns [Core 1] Out[ 8] = real{65} imag{33} 
+@12482 ns [Core 0] Out[ 9] = real{-1} imag{-1} 
+@12482 ns [Core 1] Out[ 9] = real{-1} imag{-1} 
+
+Memory Verification (Core 0 Block 1, Untouched by Overlap)...
+Core 0 Verification (Base Addr: 4):
+  Addr[4]: Actual=real{6} imag{4}  Expected=real{6} imag{4}  [OK]
+  Addr[5]: Actual=real{-2} imag{-2}  Expected=real{-2} imag{-2}  [OK]
+  Addr[6]: Actual=real{-3} imag{1}  Expected=real{-3} imag{1}  [OK]
+  Addr[7]: Actual=real{-1} imag{-3}  Expected=real{-1} imag{-3}  [OK]
+Core 1 Verification (Base Addr: 28):
+  Addr[28]: Actual=real{102} imag{52}  Expected=real{102} imag{52}  [OK]
+  Addr[29]: Actual=real{-2} imag{-2}  Expected=real{-2} imag{-2}  [OK]
+  Addr[30]: Actual=real{-3} imag{1}  Expected=real{-3} imag{1}  [OK]
+  Addr[31]: Actual=real{-1} imag{-3}  Expected=real{-1} imag{-3}  [OK]
+[TEST 7] PASSED.
+[TEST 7] Finished.
+
+[TEST 8] Zero-length Input (Edge Case)...
+[TEST 8] Finished.
+
+[TEST 9] Memory Verification...
+[TEST 9] Finished.
+
+[ALL TESTS FINISHED] @ 12754 ns
+
+Info: /OSCI/SystemC: Simulation stopped by user.
+Simulation Finished.

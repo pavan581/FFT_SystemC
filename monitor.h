@@ -1,6 +1,13 @@
-// ============================================================================
-// MONITOR.H - Standalone Monitoring Module for FFT System (AXI4-aware)
-// ============================================================================
+/*
+ * monitor.h
+ *
+ * Implements a standalone AXI4-aware simulation monitor module.
+ *
+ * It is connected to the top-level AXI read and write channels by reference.
+ * It monitors AR read requests, AW write requests, and W write data handshakes
+ * to log the address transfers and print the computed FFT output values printed
+ * by each core at the precise simulation cycle.
+ */
 
 #ifndef MONITOR_H
 #define MONITOR_H
@@ -17,15 +24,13 @@ using namespace sc_core;
 using namespace axi;
 using namespace Connections;
 
-// ============================================================================
-// Monitor Module Definition
-// ============================================================================
+// Monitor module for tracing AXI transactional handshakes and logging processed FFT output values.
 template<int NUM_CORES, int N, typename AxiCfg>
 SC_MODULE(Monitor) {
     sc_in<bool> clk;
     sc_in<bool> rst;
     
-    // Reference to top-level channels monitored by reference
+    // Monitored global channels
     const sc_vector<typename axi4<AxiCfg>::read::template chan<Connections::SYN_PORT>>& mem_read_chans;
     const sc_vector<typename axi4<AxiCfg>::write::template chan<Connections::SYN_PORT>>& mem_write_chans;
     const sc_vector<sc_signal<sc_uint<AxiCfg::addrWidth>>>& base_addrs;
@@ -52,16 +57,14 @@ SC_MODULE(Monitor) {
         sensitive << clk.pos();
         
         for (int i = 0; i < NUM_CORES; ++i) {
-            last_addr[i] = 0xFFF; // Initialize to dummy address to trigger first print
+            last_addr[i] = 0xFFF;
             current_write_addr[i] = 0;
             write_beat_count[i] = 0;
         }
     }
 
     void monitor_process() {
-        static const int HALF_WIDTH = AxiCfg::dataWidth / 2;
-        
-        // Monitor DMA read address handshakes
+        // Track read requests
         for (int i = 0; i < NUM_CORES; i++) {
             if (mem_read_chans[i].ar.val.read() && mem_read_chans[i].ar.rdy.read()) {
                 auto ar_pay = BitsToType<typename axi4<AxiCfg>::AddrPayload>(mem_read_chans[i].ar.msg.read());
@@ -73,7 +76,7 @@ SC_MODULE(Monitor) {
             }
         }
         
-        // Track AW handshakes in queues
+        // Track write address transfers
         for (int i = 0; i < NUM_CORES; i++) {
             if (mem_write_chans[i].aw.val.read() && mem_write_chans[i].aw.rdy.read()) {
                 auto aw_pay = BitsToType<typename axi4<AxiCfg>::AddrPayload>(mem_write_chans[i].aw.msg.read());
@@ -81,7 +84,7 @@ SC_MODULE(Monitor) {
             }
         }
         
-        // Monitor Core output write backs on W handshakes
+        // Trace and print output samples on AXI W channel handshakes
         for (int i = 0; i < NUM_CORES; i++) {
             if (mem_write_chans[i].w.val.read() && mem_write_chans[i].w.rdy.read()) {
                 auto w_pay = BitsToType<typename axi4<AxiCfg>::WritePayload>(mem_write_chans[i].w.msg.read());
@@ -101,23 +104,11 @@ SC_MODULE(Monitor) {
                 }
                 
                 int index = addr - (base_addrs[i].read() + N);
-                
-                sc_uint<AxiCfg::dataWidth> raw = w_pay.data;
-                double r, imag_val;
-                if (AxiCfg::dataWidth == 64) {
-                    int r_int = raw.range(AxiCfg::dataWidth - 1, HALF_WIDTH).to_int();
-                    int i_int = raw.range(HALF_WIDTH - 1, 0).to_int();
-                    r = (double)r_int;
-                    imag_val = (double)i_int;
-                } else {
-                    int r_int = raw.range(AxiCfg::dataWidth - 1, 0).to_int();
-                    r = (double)r_int;
-                    imag_val = 0.0;
-                }
+                complex_t out_val = unpack_complex<AxiCfg>(w_pay.data);
                 
                 std::cout << "@" << std::setw(5) << sc_time_stamp() 
                           << " [Core " << i << "] Out[" << std::setw(2) << index << "] = " 
-                          << complex_t(r, imag_val) << std::endl;
+                          << out_val << std::endl;
                           
                 if (w_pay.last) {
                     write_beat_count[i] = 0;

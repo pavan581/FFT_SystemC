@@ -1,7 +1,5 @@
 # Multi-Core Interleaved FFT Architecture in SystemC
 
-![SystemC](https://img.shields.io/badge/SystemC-2.3.3-blue) ![C++](https://img.shields.io/badge/C++-17-green) ![Build](https://img.shields.io/badge/build-passing-brightgreen)
-
 A pipelined, cycle-accurate **Multi-Core Interleaved Fast Fourier Transform (FFT)** implementation in SystemC. This architecture utilizes the Decimation-In-Frequency (DIF) radix-2 butterfly algorithm and features dedicated Direct Memory Access (DMA) controllers for each FFT core, operating on a shared multi-port memory.
 
 ## Table of Contents
@@ -9,7 +7,7 @@ A pipelined, cycle-accurate **Multi-Core Interleaved Fast Fourier Transform (FFT
 - [Overview](#overview)
 - [Summary of Modules](#summary-of-modules)
 - [Architecture Diagram](#architecture-diagram)
-- [Building and Running (Makefile)](#building-and-running-makefile)
+- [Building and Running](#building-and-running)
 - [Project Structure](#project-structure)
 - [Algorithm Description](#algorithm-description)
 
@@ -17,121 +15,108 @@ A pipelined, cycle-accurate **Multi-Core Interleaved Fast Fourier Transform (FFT
 
 ## Overview
 
-This project provides a **Multi-Core Interleaved FFT Processor** that can process continuous streams of data by temporally interleaving the execution of multiple independent FFT cores. 
+This project implements a **Multi-Core Interleaved FFT Processor** that processes continuous streams of data by temporally interleaving the execution of multiple independent FFT cores.
 
 ### Key Features
-- ✅ **Interleaved Multi-Core Design**: Scales throughput by instantiating multiple DMA-FFT core pairs.
-- ✅ **Staggered Execution**: Cores are started with a configurable `HOP_SIZE` delay, ensuring continuous, parallel processing without pipeline stalls.
-- ✅ **Dedicated DMA Channels**: Each core is fed by its own DMA controller unpacking 64-bit multi-port memory words on-the-fly.
-- ✅ **0-Cycle Compute Butterfly**: Computation is purely combinational, resulting in an ultra-low-latency pipeline.
-- ✅ **Completely Parametrizable**: FFT Size (N), Number of Cores, memory depth, and data/address widths are fully configurable templates.
+- **Interleaved Multi-Core Design**: Scalable performance by instantiating multiple DMA-FFT core pairs.
+- **Staggered Execution**: Launches cores with a configurable `HOP_SIZE` delay to optimize memory bus utilization.
+- **Dedicated DMA Channels**: Independent DMA controllers stream data, performing packing and unpacking of memory words.
+- **Optimized Butterfly Stage**: Employs lookup tables for precomputed twiddle factors to eliminate runtime trigonometric overhead.
+- **Fully Parametrized**: Customize FFT Size (N), Core Count, memory depth, and data/address widths via templates.
 
 ---
 
 ## Summary of Modules
 
-The codebase is highly modular, split into distinct SystemC modules focused on different stages of the data path. Below is a summary of all existing modules:
+### 1. `Top` ([top.h](file:///home/golakoti/FFT_SystemC/top.h))
+The top-level processor wrapper. It instantiates the array of cores and manages the execution flow. When a global start trigger is received, the staggering state machine fires `start` signals to individual cores delayed by `HOP_SIZE` cycles. This staggers the bus access cycles, smoothing memory bandwidth requirements and enabling parallel, interleaved throughput.
 
-### 1. `InterleavedFFT` (`interleaved_fft.h`)
-The top-level processor module. It instantiates `NUM_CORES` pairs of DMA controllers and FFT cores. It manages the temporal interleaving logic, staggering the start signal by `HOP_SIZE` clock cycles across the cores to maximize throughput.
+### 2. `Core` ([core.h](file:///home/golakoti/FFT_SystemC/core.h))
+A module-level wrapper connecting one `DMA` controller and one `FFT` core. It routes the clock, reset, and control inputs to both blocks, binds the external AXI read and write masters to top-level ports, and connects the DMA to the FFT processing core via point-to-point handshake channels.
 
-### 2. `FFT` (`fft.h`)
-The fundamental N-point FFT core pipeline. It dynamically instantiates `log₂(N)` pipeline stages, tracks cumulative latency, and generates internal pipeline synchronization logic. It outputs transformed data at a rate of 1 sample/cycle after the initial pipeline latency.
+### 3. `FFT` ([fft.h](file:///home/golakoti/FFT_SystemC/fft.h))
+The primary N-point FFT computation core. It recursively instantiates a series of `log₂(N)` butterfly stages to implement the decimation-in-frequency radix-2 butterfly cascade. It sets up clock, reset, and serial connection signals between each stage, outputting the calculated frequency bins in bit-reversed order.
 
-### 3. `Stage` (`stage.h`)
-Represents a single step in the FFT DIF decomposition. It operates in a two-phase pipeline per internal cycle:
-- **Phase 1 (Store & Forward)**: Buffers incoming inputs and outputs the pre-calculated difference from the previous block.
-- **Phase 2 (Compute)**: Fetches paired data, computes the butterfly inline, immediately outputs the sum, and saves the difference.
+### 4. `Stage` ([stage.h](file:///home/golakoti/FFT_SystemC/stage.h))
+A single processing stage of the FFT cascade. It runs a loop that alternates between:
+- **Store & Forward**: Buffering incoming inputs into an internal feedback delay line while outputting previously stored butterfly differences.
+- **Compute**: Performing radix-2 butterfly calculations using precomputed twiddle factors retrieved from a local lookup table to avoid dynamic `cos` and `sin` calls. It supports resource-constrained latency modeling.
 
-### 4. `DMA` (`dma.h`)
-A Direct Memory Access controller responsible for streaming data from the shared memory to the FFT core. It tracks memory addresses, requests 64-bit words, unpacks them into native double-precision `complex_t` numbers, and handles pipeline synchronization delays seamlessly.
+### 5. `DMA` ([dma.h](file:///home/golakoti/FFT_SystemC/dma.h))
+A dedicated controller orchestrating memory transfers for its associated FFT core. It runs three parallel threads:
+- **Address Generation**: Pushes read requests onto the AXI AR channel.
+- **Read Streaming**: Pops read data beats, unpacks them into C++ complex variables, and feeds them into the FFT core, flushing the pipeline with zero-padding as needed.
+- **Write-back Streaming**: Pops results from the FFT core, packs them into AXI data beats, writes them to memory via the AXI AW/W channels, and pops write responses.
 
-### 5. `Memory` (`memory.h`)
-A generic parameterized Multi-Port Memory block. Supports a single synchronous write port and an arbitrary `NUM_PORTS` amount of synchronous read ports, serving as the data backplane for the multi-core DMA interfaces.
+### 6. `Memory` ([memory.h](file:///home/golakoti/FFT_SystemC/memory.h))
+A generic multi-port SRAM simulation model supporting multiple AXI4 read and write slave ports. It spawns independent thread processes for each read and write port to respond to incoming AXI transactions (AR/R and AW/W/B handshakes) concurrently.
 
-### 6. Custom Data Types (`fft_types.h`)
-Provides a custom `complex_t` struct (using double precision) equipped with operator overloading for smooth integration with SystemC signals and VCD wave tracing.
+### 7. Custom Data Types ([fft_types.h](file:///home/golakoti/FFT_SystemC/fft_types.h))
+Defines the `complex_t` struct with standard operator overloading for complex arithmetic. It also provides the `pack_complex` and `unpack_complex` template functions used across the testbench, DMA, and monitor modules to slice and pack real and imaginary parts into AXI data words of configurable widths (e.g., 32-bit real-only or 64-bit real/imaginary).
 
 ---
 
 ## Architecture Diagram
 
 ```mermaid
-graph TD
-    Start[Global Start Signal] --> ControlLogic[Interleave Stagger Logic]
-    
-    subgraph Multi-Port Memory
-        Mem[Shared Memory Matrix]
-    end
+flowchart
 
-    subgraph Core 0
-        DMA0[DMA Controller 0] --> |Complex Stream| FFT0[FFT Core 0]
-    end
+ControlLogic[Top: Interleave Stagger FSM] 
+ControlLogic -->|Start T=0| DMA0
+ControlLogic -->|Start T=Hop| DMA1
 
-    subgraph Core 1
-        DMA1[DMA Controller 1] --> |Complex Stream| FFT1[FFT Core 1]
-    end
+subgraph s1["Core 0"]
+		DMA0 -->|"In"| FFT0
+        FFT0 -->|"Out"| DMA0
+end
 
-    subgraph Core N
-        DMAN[DMA Controller N] --> |Complex Stream| FFTN[FFT Core N]
-    end
+subgraph s2["Core 1"]
+		DMA1 -->|"In"| FFT1
+        FFT1 -->|"Out"| DMA1
+end
 
-    Mem ===> |64-bit Data| DMA0
-    Mem ===> |64-bit Data| DMA1
-    Mem ===> |64-bit Data| DMAN
-
-    ControlLogic -.-> |Start T=0| DMA0
-    ControlLogic -.-> |Start T=Hop| DMA1
-    ControlLogic -.-> |Start T=N*Hop| DMAN
-    
-    FFT0 --> Out0[Out Port 0]
-    FFT1 --> Out1[Out Port 1]
-    FFTN --> OutN[Out Port N]
+mem["Shared Memory"]
+s1 -->|"AXI Read/Write"| mem
+s2 -->|"AXI Read/Write"| mem
 ```
 
 ---
 
-## Building and Running (Makefile)
-
-The project includes a `Makefile` for compiling the simulation executables and managing build artifacts. 
+## Building and Running
 
 ### Prerequisites
-- **SystemC**: Version 2.3.x or later.
-- **Environment Variable**: `SYSTEMC_HOME` must point to your SystemC installation directory (e.g., `/home/user/systemc-2.3.3`).
+- SystemC 2.3.x or later.
+- `SYSTEMC_HOME` environment variable pointing to the SystemC installation folder.
 
-### Makefile Commands
+### Run Commands
 
-#### 1. Compile the Main Simulation
-Compiles the complete interleaved multi-core FFT system (`main.cpp` + `tb_interleaved_fft.h`).
-```bash
-make
-```
-*This generates an executable located at `build/main`.*
-
-#### 2. Run the Main Simulation
-Executes the compiled multi-core system and automatically pipes the standard output into a log file inside the `out/log/` folder. It also outputs VCD wave trace files to `out/vcd/`.
+#### 1. Full Multi-Core System Simulation
+Compile and run the primary test suite:
 ```bash
 make run
 ```
-Optionally, specify a custom log name:
-```bash
-make run SIM_NAME=my_custom_test
-```
+*Saves output logs to `out/log/` and VCD trace waveforms to `out/vcd/`.*
 
-#### 3. Compile the Standalone FFT Core Testbench
-If you just want to test a single, isolated FFT core (`tb_fft.cpp`) without the DMA or Multi-core wrappers:
-```bash
-make build/tb_fft
-```
-
-#### 4. Run the Standalone FFT Core Testbench
-Executes the isolated FFT testbench:
+#### 2. Isolated FFT Core Unit Test
+Compile and run tests directly on the standalone FFT core module:
 ```bash
 make run_fft_tb
 ```
 
+#### 3. DMA Controller Unit Test
+Compile and run test scenarios for the AXI DMA controller:
+```bash
+make run_dma_tb
+```
+
+#### 4. Shared Memory Unit Test
+Compile and run test scenarios for the multi-port Memory block:
+```bash
+make run_mem_tb
+```
+
 #### 5. Clean Build Artifacts
-Removes all compiled object files and the `build/` directory to ensure a fresh compilation state.
+Clean the build output:
 ```bash
 make clean
 ```
@@ -141,24 +126,24 @@ make clean
 ## Project Structure
 
 ```text
-Project_FFT/
-├── build/                  # Compiled executables and object files
-├── out/
-│   ├── log/                # Simulation log files
-│   └── vcd/                # VCD wave trace files
-├── Makefile                # Primary build configuration
-├── README.md               # Architecture and execution guide
-├── main.cpp                # Main simulation entry point
-├── fft_types.h             # Complex numbers and SystemC tracing
-├── stage.h                 # Single FFT pipeline stage
-├── fft.h                   # Single N-point FFT core
-├── dma.h                   # DMA memory controller
-├── memory.h                # Multi-port shared memory
-├── interleaved_fft.h       # Top-level Interleaved Multi-Core wrappers
-├── tb_interleaved_fft.h    # Comprehensive Top-Level Testbench
-├── tb_fft.cpp              # Standalone unit testbench for FFT Core
-├── tb_dma.*                # Unit testbenches for DMA
-└── tb_memory.h             # Unit testbenches for Memory
+FFT_SystemC/
+├── Makefile            # Primary build configuration
+├── README.md           # Architecture and execution guide
+├── main.cpp            # Simulation entry point
+├── fft_types.h         # Complex types and AXI packing helpers
+├── stage.h             # DIF FFT stage implementation
+├── fft.h               # FFT cascade block
+├── dma.h               # Direct memory access module
+├── memory.h            # Multi-port SRAM module
+├── top.h               # Top wrapper staggering control
+├── core.h              # Unified core wrapper
+├── monitor.h           # System trace monitor
+├── tb_top.h            # Integrated top-level testbench
+├── tb_fft.cpp          # Standalone FFT test suite
+├── tb_dma.h            # DMA testbench declaration
+├── tb_dma.cpp          # DMA testbench driver
+├── tb_memory.h         # Memory testbench declaration
+└── tb_memory.cpp       # Memory testbench driver
 ```
 
 ---
@@ -175,9 +160,3 @@ For an N-point FFT, the pipeline consists of **log₂(N)** independent stages co
 
 ### Output Ordering
 Due to the DIF algorithm, the final spectral outputs naturally emerge in **bit-reversed order**. For instance, with N=8, the output bins appear as: `0, 4, 2, 6, 1, 5, 3, 7`.
-
-### Pipeline Timing
-The pipeline accepts 1 new input per internal cycle. Initial latency before the first output appears is defined by the following formula:
-`Latency ≈ N + 2*log₂(N) - 1 cycles`
-
----
