@@ -1,9 +1,9 @@
 // ============================================================================
-// INTERLEAVED_FFT.H - Top-Level Wrapper Module (Official MatchLib version)
+// TOP_FFT.H - Top-Level Wrapper Module (Official MatchLib version)
 // ============================================================================
 
-#ifndef INTERLEAVED_FFT_H
-#define INTERLEAVED_FFT_H
+#ifndef TOP_FFT_H
+#define TOP_FFT_H
 
 #include <systemc.h>
 #include <vector>
@@ -114,4 +114,4 @@ SC_MODULE(Top) {
     }
 };
 
-#endif // INTERLEAVED_FFT_H
+#endif // TOP_FFT_H

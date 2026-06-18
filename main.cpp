@@ -6,7 +6,7 @@
 // with specific parameters and starts the simulation kernel.
 // ============================================================================
 
-#include "tb_interleaved_fft.h"
+#include "tb_top.h"
 #include <iostream>
 
 int sc_main(int argc, char* argv[]) {
