@@ -44,15 +44,21 @@ SC_MODULE(Memory) {
             }
             
             typename axi4<AxiCfg>::AddrPayload req;
-            if (read_ports[port_idx].nb_aread(req)) {
+            if (read_ports[port_idx].ar.PopNB(req)) {
                 unsigned int addr = req.addr;
-                typename axi4<AxiCfg>::ReadPayload resp;
-                resp.data = (addr < DEPTH) ? mem[addr] : (sc_uint<AxiCfg::dataWidth>)0;
-                resp.id = req.id;
-                resp.resp = 0; // OKAY
-                resp.last = true;
-                
-                read_ports[port_idx].rwrite(resp);
+                int len = req.len;
+                for (int beat = 0; beat <= len; ++beat) {
+                    typename axi4<AxiCfg>::ReadPayload resp;
+                    resp.data = (addr < DEPTH) ? mem[addr] : (sc_uint<AxiCfg::dataWidth>)0;
+                    resp.id = req.id;
+                    resp.resp = 0; // OKAY
+                    resp.last = (beat == len);
+                    
+                    read_ports[port_idx].rwrite(resp);
+                    
+                    // Increment address
+                    addr = addr + 1;
+                }
             } else {
                 wait();
             }
@@ -72,12 +78,16 @@ SC_MODULE(Memory) {
             }
             
             typename axi4<AxiCfg>::AddrPayload req;
-            typename axi4<AxiCfg>::WritePayload data;
-            
-            if (write_ports[port_idx].nb_wread(req, data)) {
+            if (write_ports[port_idx].aw.PopNB(req)) {
                 unsigned int addr = req.addr;
-                if (addr < DEPTH) {
-                    mem[addr] = data.data;
+                int len = req.len;
+                for (int beat = 0; beat <= len; ++beat) {
+                    typename axi4<AxiCfg>::WritePayload data = write_ports[port_idx].w.Pop();
+                    if (addr < DEPTH) {
+                        mem[addr] = data.data;
+                    }
+                    // Increment address
+                    addr = addr + 1;
                 }
                 
                 typename axi4<AxiCfg>::WRespPayload resp;

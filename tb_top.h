@@ -10,7 +10,8 @@
 #include <systemc.h>
 #include <axi/axi4.h>
 #include <connections/connections.h>
-#include "interleaved_fft.h"
+#include "top.h"
+#include "monitor.h"
 #include "memory.h"
 #include <vector>
 #include <queue>
@@ -59,10 +60,9 @@ SC_MODULE(Testbench) {
     sc_vector<sc_signal<int>> num_samples;
     
     sc_trace_file* tf;
-    sc_uint<ADDR_WIDTH> last_addr[NUM_CORES];
     
-    // Decoupled queues for tracking write addresses in order
-    std::queue<unsigned int> aw_addr_queue[NUM_CORES];
+    // Standalone AXI Monitor
+    Monitor<NUM_CORES, N, AxiCfg>* monitor;
 
     // Unpacked trace signals for easy waveform verification
     sc_signal<unsigned int>* trace_ar_addr;
@@ -111,12 +111,13 @@ SC_MODULE(Testbench) {
         // Bind TB write master for initialization
         tb_write_master(mem_write_chans[NUM_CORES]);
 
+        // Instantiate and connect Monitor
+        monitor = new Monitor<NUM_CORES, N, AxiCfg>("monitor", mem_read_chans, mem_write_chans, base_addrs);
+        monitor->clk(clk);
+        monitor->rst(rst);
+
         // Source thread for driving test stimulus
         SC_THREAD(source_thread);
-        sensitive << clk.posedge_event();
-
-        // Monitor process for printing outputs and reads
-        SC_METHOD(monitor_process);
         sensitive << clk.posedge_event();
 
         SC_METHOD(cycle_counter);
@@ -169,6 +170,7 @@ SC_MODULE(Testbench) {
         sc_close_vcd_trace_file(tf);
         delete fft_sys;
         delete mem;
+        delete monitor;
         
         delete[] trace_ar_addr;
         delete[] trace_r_real;
@@ -243,62 +245,7 @@ SC_MODULE(Testbench) {
         }
     }
 
-    // Monitor method checking channels on positive clock edges
-    void monitor_process() {
-        static const int HALF_WIDTH = AxiCfg::dataWidth / 2;
-        // Monitor DMA read address handshakes
-        for (int i = 0; i < NUM_CORES; i++) {
-            if (mem_read_chans[i].ar.val.read() && mem_read_chans[i].ar.rdy.read()) {
-                auto ar_pay = BitsToType<typename axi4<AxiCfg>::AddrPayload>(mem_read_chans[i].ar.msg.read());
-                sc_uint<ADDR_WIDTH> addr = ar_pay.addr;
-                if (addr != last_addr[i]) {
-                    std::cout << "DEBUG DMA[" << i << "] Read Addr: " << addr << " @ " << sc_time_stamp() << std::endl;
-                    last_addr[i] = addr;
-                }
-            }
-        }
-        
-        // Track AW handshakes in queues
-        for (int i = 0; i < NUM_CORES; i++) {
-            if (mem_write_chans[i].aw.val.read() && mem_write_chans[i].aw.rdy.read()) {
-                auto aw_pay = BitsToType<typename axi4<AxiCfg>::AddrPayload>(mem_write_chans[i].aw.msg.read());
-                aw_addr_queue[i].push(aw_pay.addr.to_uint());
-            }
-        }
-        
-        // Monitor Core output write backs on W handshakes
-        for (int i = 0; i < NUM_CORES; i++) {
-            if (mem_write_chans[i].w.val.read() && mem_write_chans[i].w.rdy.read()) {
-                unsigned int addr = 0;
-                if (!aw_addr_queue[i].empty()) {
-                    addr = aw_addr_queue[i].front();
-                    aw_addr_queue[i].pop();
-                } else {
-                    addr = base_addrs[i].read() + N;
-                }
-                
-                int index = addr - (base_addrs[i].read() + N);
-                
-                auto w_pay = BitsToType<typename axi4<AxiCfg>::WritePayload>(mem_write_chans[i].w.msg.read());
-                sc_uint<AxiCfg::dataWidth> raw = w_pay.data;
-                double r, imag_val;
-                if (AxiCfg::dataWidth == 64) {
-                    int r_int = raw.range(AxiCfg::dataWidth - 1, HALF_WIDTH).to_int();
-                    int i_int = raw.range(HALF_WIDTH - 1, 0).to_int();
-                    r = (double)r_int;
-                    imag_val = (double)i_int;
-                } else {
-                    int r_int = raw.range(AxiCfg::dataWidth - 1, 0).to_int();
-                    r = (double)r_int;
-                    imag_val = 0.0;
-                }
-                
-                std::cout << "@" << std::setw(5) << sc_time_stamp() 
-                          << " [Core " << i << "] Out[" << std::setw(2) << index << "] = " 
-                          << complex_t(r, imag_val) << std::endl;
-            }
-        }
-    }
+
 
     // Unpacker helper for complex variables
     complex_t unpack_complex(sc_uint<AxiCfg::dataWidth> raw) {
@@ -418,7 +365,6 @@ SC_MODULE(Testbench) {
         for(int i=0; i<NUM_CORES; i++) {
             base_addrs[i].write(1023); 
             num_samples[i].write(0);
-            last_addr[i] = 0xFFF; // Initialize to dummy address to trigger first print
         }
         
         // ====================================================================

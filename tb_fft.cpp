@@ -89,7 +89,7 @@ SC_MODULE(FFT_TB) {
             trace_in_imag.write(val.imag);
             tb_in_port.Push(val);
         }
-        for (int i=0; i<N-1; i++) { // Flush pipeline
+        for (int i=0; i<N; i++) { // Flush pipeline (N dummy inputs for block alignment)
             complex_t val(0, 0);
             trace_in_real.write(val.real);
             trace_in_imag.write(val.imag);
@@ -107,7 +107,7 @@ SC_MODULE(FFT_TB) {
             trace_in_imag.write(val.imag);
             tb_in_port.Push(val);
         }
-        for (int i=0; i<N-1; i++) { // Flush pipeline
+        for (int i=0; i<N; i++) { // Flush pipeline (N dummy inputs for block alignment)
             complex_t val(0, 0);
             trace_in_real.write(val.real);
             trace_in_imag.write(val.imag);
@@ -125,7 +125,7 @@ SC_MODULE(FFT_TB) {
             trace_in_imag.write(val.imag);
             tb_in_port.Push(val);
         }
-        for (int i=0; i<N-1; i++) { // Flush pipeline
+        for (int i=0; i<N; i++) { // Flush pipeline (N dummy inputs for block alignment)
             complex_t val(0, 0);
             trace_in_real.write(val.real);
             trace_in_imag.write(val.imag);
@@ -144,11 +144,20 @@ SC_MODULE(FFT_TB) {
         trace_out_imag.write(0.0);
         wait();
  
-        while (true) {
-            complex_t out_val = tb_out_port.Pop();
-            trace_out_real.write(out_val.real);
-            trace_out_imag.write(out_val.imag);
-            std::cout << "@" << sc_time_stamp() << " FFT Out = " << out_val << std::endl;
+        for (int t = 1; t <= 3; ++t) {
+            std::cout << "\n[FFT TB] FFT Results for TEST " << t << ":" << std::endl;
+            // Capture and print the actual N outputs (which come first)
+            for (int i = 0; i < N; ++i) {
+                complex_t out_val = tb_out_port.Pop();
+                trace_out_real.write(out_val.real);
+                trace_out_imag.write(out_val.imag);
+                std::cout << "@" << sc_time_stamp() << " FFT Out[" << i << "] = " << out_val << std::endl;
+            }
+            
+            // Discard the remaining N trailing dummy/flush outputs of this block
+            for (int i = 0; i < N; ++i) {
+                tb_out_port.Pop();
+            }
         }
     }
 };

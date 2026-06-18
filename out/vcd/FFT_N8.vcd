@@ -1,5 +1,5 @@
 $date
-     Jun 18, 2026       13:14:21
+     Jun 18, 2026       16:26:28
 $end
 
 $version
@@ -388,13 +388,13 @@ r1 aaaae
 
 #59000
 1aaaaa
-r1 aaaac
 
 #59500
 0aaaaa
 
 #60000
 1aaaaa
+r1 aaaac
 
 #60500
 0aaaaa
@@ -419,111 +419,87 @@ r1 aaaac
 
 #64000
 1aaaaa
-r-1 aaaae
 
 #64500
 0aaaaa
 
 #65000
 1aaaaa
-r-6.123233995736766e-17 aaaae
-r1 aaaaf
 
 #65500
 0aaaaa
 
 #66000
 1aaaaa
-r0 aaaac
-r6.123233995736766e-17 aaaae
-r-1 aaaaf
 
 #66500
 0aaaaa
 
 #67000
 1aaaaa
-r0.7071067811865475 aaaae
-r0.7071067811865476 aaaaf
+r0 aaaac
 
 #67500
 0aaaaa
 
 #68000
 1aaaaa
-r-0.7071067811865475 aaaae
-r-0.7071067811865476 aaaaf
 
 #68500
 0aaaaa
 
 #69000
 1aaaaa
-r-0.7071067811865476 aaaae
-r0.7071067811865475 aaaaf
 
 #69500
 0aaaaa
 
 #70000
 1aaaaa
-r0.7071067811865476 aaaae
-r-0.7071067811865475 aaaaf
 
 #70500
 0aaaaa
 
 #71000
 1aaaaa
-r7 aaaae
-r0 aaaaf
+r8 aaaae
 
 #71500
 0aaaaa
 
 #72000
 1aaaaa
-r1 aaaae
+r0 aaaae
 
 #72500
 0aaaaa
 
 #73000
 1aaaaa
-r6.123233995736766e-17 aaaae
-r-1 aaaaf
 
 #73500
 0aaaaa
 
 #74000
 1aaaaa
-r-6.123233995736766e-17 aaaae
-r1 aaaaf
 
 #74500
 0aaaaa
 
 #75000
 1aaaaa
-r-0.7071067811865475 aaaae
-r-0.7071067811865476 aaaaf
 
 #75500
 0aaaaa
 
 #76000
 1aaaaa
-r0.7071067811865475 aaaae
-r0.7071067811865476 aaaaf
 
 #76500
 0aaaaa
 
 #77000
 1aaaaa
-r0.7071067811865476 aaaae
-r-0.7071067811865475 aaaaf
 
 #77500
 0aaaaa
@@ -740,14 +716,12 @@ r-0.7071067811865475 aaaaf
 
 #113000
 1aaaaa
-r-1 aaaac
 
 #113500
 0aaaaa
 
 #114000
 1aaaaa
-r1 aaaac
 
 #114500
 0aaaaa
@@ -769,8 +743,6 @@ r1 aaaac
 #117000
 1aaaaa
 r-1 aaaac
-r-0.7071067811865476 aaaae
-r0.7071067811865475 aaaaf
 
 #117500
 0aaaaa
@@ -778,8 +750,6 @@ r0.7071067811865475 aaaaf
 #118000
 1aaaaa
 r1 aaaac
-r0 aaaae
-r0 aaaaf
 
 #118500
 0aaaaa
@@ -787,103 +757,83 @@ r0 aaaaf
 #119000
 1aaaaa
 r-1 aaaac
-r2 aaaae
 
 #119500
 0aaaaa
 
 #120000
 1aaaaa
-r0 aaaac
-r-0.9999999999999999 aaaae
-r-1 aaaaf
+r1 aaaac
 
 #120500
 0aaaaa
 
 #121000
 1aaaaa
-r-1 aaaae
-r1 aaaaf
+r-1 aaaac
 
 #121500
 0aaaaa
 
 #122000
 1aaaaa
-r-0.7071067811865476 aaaae
-r0.2928932188134524 aaaaf
+r0 aaaac
 
 #122500
 0aaaaa
 
 #123000
 1aaaaa
-r0.7071067811865474 aaaae
-r1.707106781186547 aaaaf
 
 #123500
 0aaaaa
 
 #124000
 1aaaaa
-r0.7071067811865477 aaaae
-r-1.707106781186547 aaaaf
 
 #124500
 0aaaaa
 
 #125000
 1aaaaa
-r-0.7071067811865475 aaaae
-r-0.2928932188134525 aaaaf
 
 #125500
 0aaaaa
 
 #126000
 1aaaaa
-r0 aaaae
-r0 aaaaf
 
 #126500
 0aaaaa
 
 #127000
 1aaaaa
-r6 aaaae
+r8 aaaae
 
 #127500
 0aaaaa
 
 #128000
 1aaaaa
-r0.9999999999999999 aaaae
-r1 aaaaf
+r0 aaaae
 
 #128500
 0aaaaa
 
 #129000
 1aaaaa
-r1 aaaae
-r-1 aaaaf
 
 #129500
 0aaaaa
 
 #130000
 1aaaaa
-r0.7071067811865476 aaaae
-r-0.2928932188134524 aaaaf
 
 #130500
 0aaaaa
 
 #131000
 1aaaaa
-r-0.7071067811865474 aaaae
-r-1.707106781186547 aaaaf
 
 #131500
 0aaaaa
@@ -1099,3 +1049,21 @@ r-1.707106781186547 aaaaf
 0aaaaa
 
 #167000
+1aaaaa
+
+#167500
+0aaaaa
+
+#168000
+1aaaaa
+
+#168500
+0aaaaa
+
+#169000
+1aaaaa
+
+#169500
+0aaaaa
+
+#170000

@@ -41,8 +41,8 @@ public:
     int delay_len;
     int alu_cycles;
     
-    std::vector<complex_t> buf_in;
-    std::vector<complex_t> buf_out;
+    std::vector<complex_t> buf;
+    bool has_valid_diffs;
     
     complex_t get_twiddle(int k, int n) {
         const double PI = 3.14159265358979323846;
@@ -56,9 +56,9 @@ public:
         
         // Clear internal feedback buffers on reset
         for (int i = 0; i < delay_len; ++i) {
-            buf_in[i] = complex_t(0.0, 0.0);
-            buf_out[i] = complex_t(0.0, 0.0);
+            buf[i] = complex_t(0.0, 0.0);
         }
+        has_valid_diffs = false;
         
         wait();
         
@@ -66,16 +66,19 @@ public:
             // Phase 1: Store & Forward
             for (int c = 0; c < delay_len; ++c) {
                 complex_t input = in_data.Pop();
-                buf_in[c] = input;
                 
-                complex_t output_val = buf_out[c];
-                out_data.Push(output_val);
+                if (has_valid_diffs) {
+                    complex_t output_val = buf[c];
+                    out_data.Push(output_val);
+                }
+                
+                buf[c] = input;
             }
             
             // Phase 2: Compute
             for (int k = 0; k < delay_len; ++k) {
                 complex_t val_b = in_data.Pop();
-                complex_t val_a = buf_in[k];
+                complex_t val_a = buf[k];
                 
                 complex_t w = get_twiddle(k, N_STAGE);
                 
@@ -88,8 +91,9 @@ public:
                 complex_t diff = (val_a - val_b) * w;
                 
                 out_data.Push(sum);
-                buf_out[k] = diff;
+                buf[k] = diff;
             }
+            has_valid_diffs = true;
         }
     }
     
@@ -112,8 +116,8 @@ public:
         in_data("in_data"),
         out_data("out_data"),
         delay_len(N_STAGE / 2),
-        buf_in(N_STAGE / 2, complex_t(0, 0)),
-        buf_out(N_STAGE / 2, complex_t(0, 0))
+        buf(N_STAGE / 2, complex_t(0, 0)),
+        has_valid_diffs(false)
     {
         alu_cycles = calc_latency(n_mult, n_add);
         

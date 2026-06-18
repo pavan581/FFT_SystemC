@@ -39,6 +39,31 @@ SC_MODULE(DMA) {
     Out<complex_t> fft_out;
     In<complex_t> fft_in;
 
+    // AXI Payloads Typenames
+    typedef typename axi4<AxiCfg>::AddrPayload AddrPayload;
+    typedef typename axi4<AxiCfg>::ReadPayload ReadPayload;
+    typedef typename axi4<AxiCfg>::WritePayload WritePayload;
+    typedef typename axi4<AxiCfg>::WRespPayload WRespPayload;
+
+    // Payload Helper Functions
+    AddrPayload create_addr_req(sc_uint<AxiCfg::addrWidth> addr, int len) {
+        AddrPayload req;
+        req.addr = addr;
+        req.id = 0;
+        req.len = len;
+        req.size = AxiCfg::dataWidth == 64 ? 3 : 2;
+        req.burst = 1; // INCR
+        return req;
+    }
+
+    WritePayload create_write_payload(sc_uint<AxiCfg::dataWidth> data, bool last) {
+        WritePayload w_pay;
+        w_pay.data = data;
+        w_pay.wstrb = ~0;
+        w_pay.last = last;
+        return w_pay;
+    }
+
     // Calculates total pipeline delay / latency based on size and ALU constraints
     static int calc_pipeline_latency() {
         int num_stages = (int)std::log2(N_SIZE);
@@ -65,19 +90,8 @@ SC_MODULE(DMA) {
             
             int total = num_samples.read();
             if (total > 0) {
-                sc_uint<AxiCfg::addrWidth> addr = base_addr.read();
-                
-                for (int i = 0; i < total; ++i) {
-                    typename axi4<AxiCfg>::AddrPayload req;
-                    req.addr = addr;
-                    req.id = 0;
-                    req.len = 0;
-                    req.size = AxiCfg::dataWidth == 64 ? 3 : 2;
-                    req.burst = 1; // INCR Mode
-                    
-                    mem_read_port.ar.Push(req);
-                    addr = addr + 1; // Increment address by 1 word
-                }
+                AddrPayload req = create_addr_req(base_addr.read(), total - 1);
+                mem_read_port.ar.Push(req);
             }
             
             // Wait for busy to deassert before listening for next start
@@ -106,11 +120,11 @@ SC_MODULE(DMA) {
             if (total > 0) {
                 int latency = calc_pipeline_latency();
                 int total_inputs = ((total + latency + N_SIZE - 1) / N_SIZE) * N_SIZE;
-                int dummy_inputs_to_push = total_inputs - total;
+                int flush_inputs_to_push = total_inputs - total;
                 
                 // Push real samples
                 for (int i = 0; i < total; ++i) {
-                    typename axi4<AxiCfg>::ReadPayload resp = mem_read_port.r.Pop();
+                    ReadPayload resp = mem_read_port.r.Pop();
                     
                     double real_part, imag_part;
                     static const int HALF_WIDTH = AxiCfg::dataWidth / 2;
@@ -129,8 +143,8 @@ SC_MODULE(DMA) {
                     fft_out.Push(sample);
                 }
                 
-                // Push dummy samples to flush the pipeline to a block boundary
-                for (int i = 0; i < dummy_inputs_to_push; ++i) {
+                // Push flush samples to clear the pipeline to a block boundary
+                for (int i = 0; i < flush_inputs_to_push; ++i) {
                     fft_out.Push(complex_t(0.0, 0.0));
                 }
             }
@@ -141,7 +155,7 @@ SC_MODULE(DMA) {
         }
     }
 
-    // Thread 3: Collects FFT results, discards initial latency, and writes real outputs back
+    // Thread 3: Collects FFT results, writes real outputs back, and discards flush outputs
     void write_thread() {
         mem_write_port.aw.Reset();
         mem_write_port.w.Reset();
@@ -161,24 +175,16 @@ SC_MODULE(DMA) {
                 static const int HALF_WIDTH = AxiCfg::dataWidth / 2;
                 int latency = calc_pipeline_latency();
                 int total_inputs = ((total + latency + N_SIZE - 1) / N_SIZE) * N_SIZE;
-                int remaining_to_discard = total_inputs - latency - total;
+                int flush_outputs_to_discard = total_inputs - total;
                 sc_uint<AxiCfg::addrWidth> addr = base_addr.read() + N_SIZE;
                 
-                // Discard the initial pipeline latency/dummy outputs
-                for (int i = 0; i < latency; ++i) {
-                    fft_in.Pop();
-                }
+                // Push single AW address payload for the write burst
+                AddrPayload aw_pay = create_addr_req(addr, total - 1);
+                mem_write_port.aw.Push(aw_pay);
                 
-                // Write real outputs to memory
+                // Write real outputs to memory (first 'total' outputs are the valid ones)
                 for (int i = 0; i < total; ++i) {
                     complex_t out_val = fft_in.Pop();
-                    
-                    typename axi4<AxiCfg>::AddrPayload aw_pay;
-                    aw_pay.addr = addr + i;
-                    aw_pay.id = 0;
-                    aw_pay.len = 0;
-                    aw_pay.size = AxiCfg::dataWidth == 64 ? 3 : 2;
-                    aw_pay.burst = 1;
                     
                     sc_int<32> r_sc = (int)std::round(out_val.real);
                     sc_int<32> i_sc = (int)std::round(out_val.imag);
@@ -190,22 +196,17 @@ SC_MODULE(DMA) {
                         packed = r_sc;
                     }
                     
-                    typename axi4<AxiCfg>::WritePayload w_pay;
-                    w_pay.data = packed;
-                    w_pay.wstrb = ~0;
-                    w_pay.last = true;
-                    
-                    mem_write_port.aw.Push(aw_pay);
+                    WritePayload w_pay = create_write_payload(packed, i == total - 1);
                     mem_write_port.w.Push(w_pay);
-                    
-                    // Discard write response handshake
-                    mem_write_port.b.Pop();
                 }
                 
-                // Discard the remaining trailing dummy outputs to clear the pipeline
-                for (int i = 0; i < remaining_to_discard; ++i) {
+                // Discard trailing flush/dummy outputs
+                for (int i = 0; i < flush_outputs_to_discard; ++i) {
                     fft_in.Pop();
                 }
+                
+                // Pop single write response for the entire burst
+                mem_write_port.b.Pop();
             }
             
             busy.write(false);
