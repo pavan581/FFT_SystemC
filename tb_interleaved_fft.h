@@ -1,32 +1,31 @@
 // ============================================================================
-// TB_INTERLEAVED_FFT.H - Top-Level System Testbench (AXI4 version)
-// ============================================================================
-// This testbench verifies the functionality of the complete Multi-Core 
-// Interleaved FFT system. It instantiates the shared memory, the AXI
-// channels, the DMA controllers, and the FFT processing cores.
+// TB_INTERLEAVED_FFT.H - Top-Level System Testbench (Official MatchLib version)
 // ============================================================================
 
 #ifndef TESTBENCH_H
 #define TESTBENCH_H
 
+#define CONNECTIONS_NAMING_ORIGINAL
+
 #include <systemc.h>
+#include <axi/axi4.h>
+#include <connections/connections.h>
 #include "interleaved_fft.h"
 #include "memory.h"
-#include "monitor.h"
-#include "matchlib_axi.h"
 #include <vector>
+#include <queue>
 #include <iostream>
 #include <iomanip>
 #include <cmath>
 
+using namespace sc_core;
+using namespace axi;
+using namespace Connections;
+
 // ============================================================================
 // AXI4 Configuration Struct
 // ============================================================================
-struct AxiCfg {
-    static const int addrWidth = 12;
-    static const int dataWidth = 64;
-    static const int idWidth = 4;
-};
+typedef axi::cfg::standard AxiCfg;
 
 // ============================================================================
 // Testbench Module Definition
@@ -38,45 +37,55 @@ SC_MODULE(Testbench) {
     sc_signal<bool> rst;
 
     static const int MEM_DEPTH   = 2048;
-    static const int ADDR_WIDTH  = 12;
-    static const int DATA_WIDTH  = 64;
+    static const int ADDR_WIDTH  = AxiCfg::addrWidth;
+    static const int DATA_WIDTH  = AxiCfg::dataWidth;
     
     // Multi-port AXI Memory
     Memory<NUM_CORES + 1, NUM_CORES, MEM_DEPTH, AxiCfg>* mem;
     
     // AXI read/write channels
-    sc_vector<axi::axi4_read_channel<AxiCfg>> mem_read_chans;
-    sc_vector<axi::axi4_write_channel<AxiCfg>> mem_write_chans;
+    sc_vector<typename axi4<AxiCfg>::read::template chan<Connections::SYN_PORT>> mem_read_chans;
+    sc_vector<typename axi4<AxiCfg>::write::template chan<Connections::SYN_PORT>> mem_write_chans;
 
-    InterleavedFFT<N, NUM_CORES, HOP, AxiCfg, NUM_MULT, NUM_ADD>* fft_sys;
+    // AXI Write Master for initialization
+    typename axi4<AxiCfg>::write::template master<Connections::SYN_PORT> tb_write_master;
+
+    // Top Module
+    Top<N, NUM_CORES, HOP, AxiCfg, NUM_MULT, NUM_ADD>* fft_sys;
     
     sc_signal<bool> start_signal;
     
     sc_vector<sc_signal<sc_uint<ADDR_WIDTH>>> base_addrs;
     sc_vector<sc_signal<int>> num_samples;
     
-    sc_vector<sc_signal<complex_t>> out_data;
-    sc_vector<sc_signal<bool>> out_valids;
-    sc_vector<sc_signal<int>> out_indices;
-    
-    // Memory read address signals for Monitor
-    sc_vector<sc_signal<sc_uint<ADDR_WIDTH>>> tb_mem_raddrs;
-
-    Monitor<NUM_CORES, ADDR_WIDTH>* mon;
-
     sc_trace_file* tf;
+    sc_uint<ADDR_WIDTH> last_addr[NUM_CORES];
+    
+    // Decoupled queues for tracking write addresses in order
+    std::queue<unsigned int> aw_addr_queue[NUM_CORES];
+
+    // Unpacked trace signals for easy waveform verification
+    sc_signal<unsigned int>* trace_ar_addr;
+    sc_signal<double>* trace_r_real;
+    sc_signal<double>* trace_r_imag;
+    sc_signal<unsigned int>* trace_aw_addr;
+    sc_signal<double>* trace_w_real;
+    sc_signal<double>* trace_w_imag;
 
     SC_CTOR(Testbench) :
         clk("clk", 1, SC_NS),
         mem_read_chans("mem_read_chans", NUM_CORES),
         mem_write_chans("mem_write_chans", NUM_CORES + 1),
+        tb_write_master("tb_write_master"),
         base_addrs("base_addr", NUM_CORES),
-        num_samples("num_samples", NUM_CORES),
-        out_data("out_data", NUM_CORES),
-        out_valids("out_valid", NUM_CORES),
-        out_indices("out_index", NUM_CORES),
-        tb_mem_raddrs("tb_mem_raddrs", NUM_CORES)
+        num_samples("num_samples", NUM_CORES)
     {
+        trace_ar_addr = new sc_signal<unsigned int>[NUM_CORES];
+        trace_r_real = new sc_signal<double>[NUM_CORES];
+        trace_r_imag = new sc_signal<double>[NUM_CORES];
+        trace_aw_addr = new sc_signal<unsigned int>[NUM_CORES];
+        trace_w_real = new sc_signal<double>[NUM_CORES];
+        trace_w_imag = new sc_signal<double>[NUM_CORES];
         // 1. Create and Connect Memory
         mem = new Memory<NUM_CORES + 1, NUM_CORES, MEM_DEPTH, AxiCfg>("shared_mem");
         mem->clk(clk);
@@ -86,7 +95,7 @@ SC_MODULE(Testbench) {
         mem->write_ports(mem_write_chans);
 
         // 2. Create and Connect FFT System
-        fft_sys = new InterleavedFFT<N, NUM_CORES, HOP, AxiCfg, NUM_MULT, NUM_ADD>("fft_sys");
+        fft_sys = new Top<N, NUM_CORES, HOP, AxiCfg, NUM_MULT, NUM_ADD>("fft_sys");
         fft_sys->clk(clk);
         fft_sys->rst(rst);
         fft_sys->start(start_signal);
@@ -98,34 +107,26 @@ SC_MODULE(Testbench) {
         
         fft_sys->base_addrs(base_addrs);
         fft_sys->num_samples(num_samples);
-        
-        fft_sys->out_data(out_data);
-        fft_sys->out_valids(out_valids);
-        fft_sys->out_indices(out_indices);
 
+        // Bind TB write master for initialization
+        tb_write_master(mem_write_chans[NUM_CORES]);
+
+        // Source thread for driving test stimulus
         SC_THREAD(source_thread);
         sensitive << clk.posedge_event();
-        
-        // 3. Create and Connect Monitor
-        mon = new Monitor<NUM_CORES, ADDR_WIDTH>("monitor");
-        mon->clk(clk);
-        for(int i=0; i<NUM_CORES; i++) {
-            mon->out_data[i](out_data[i]);
-            mon->out_valids[i](out_valids[i]);
-            mon->out_indices[i](out_indices[i]);
-            mon->mem_raddrs[i](tb_mem_raddrs[i]);
-        }
 
-        // Combinational update of Monitor's addresses
-        SC_METHOD(update_monitor_addrs);
-        for (int i = 0; i < NUM_CORES; i++) {
-            sensitive << mem_read_chans[i].ar.msg << mem_read_chans[i].ar.vld << mem_read_chans[i].ar.rdy;
-        }
+        // Monitor process for printing outputs and reads
+        SC_METHOD(monitor_process);
+        sensitive << clk.posedge_event();
 
         SC_METHOD(cycle_counter);
         sensitive << clk.posedge_event();
 
-        // 4. Trace Setup
+        // Unpack method for tracing AXI payloads
+        SC_METHOD(trace_unpack_process);
+        sensitive << clk.posedge_event();
+
+        // 3. Trace Setup
         std::string trace_name = "./out/vcd/InterleavedFFT-DMA_N" + std::to_string(N) + "_C" + std::to_string(NUM_CORES) + "_H" + std::to_string(HOP) + "_M" + std::to_string(NUM_MULT) + "_A" + std::to_string(NUM_ADD) + "_axi";
         tf = sc_create_vcd_trace_file(trace_name.c_str());
         tf->set_time_unit(1, SC_PS);
@@ -134,14 +135,33 @@ SC_MODULE(Testbench) {
         sc_trace(tf, cycle_count, "cycle_count");
         sc_trace(tf, rst, "rst");
         sc_trace(tf, start_signal, "start");
-        
-        for(int i=0; i<NUM_CORES; i++) {
-            std::string d_name = "out_data_" + std::to_string(i);
-            std::string v_name = "out_valid_" + std::to_string(i);
-            std::string idx_name = "out_idx_" + std::to_string(i);
-            sc_trace(tf, out_data[i], d_name.c_str());
-            sc_trace(tf, out_valids[i], v_name.c_str());
-            sc_trace(tf, out_indices[i], idx_name.c_str());
+
+        for (int i = 0; i < NUM_CORES; ++i) {
+            std::string idx = std::to_string(i);
+            
+            sc_trace(tf, fft_sys->core_starts[i], "core_start_" + idx);
+            sc_trace(tf, fft_sys->core_busy[i], "core_busy_" + idx);
+            
+            sc_trace(tf, mem_read_chans[i].ar.val, "ar_val_" + idx);
+            sc_trace(tf, mem_read_chans[i].ar.rdy, "ar_rdy_" + idx);
+            sc_trace(tf, trace_ar_addr[i], "ar_addr_" + idx);
+            
+            sc_trace(tf, mem_read_chans[i].r.val, "r_val_" + idx);
+            sc_trace(tf, mem_read_chans[i].r.rdy, "r_rdy_" + idx);
+            sc_trace(tf, trace_r_real[i], "r_real_" + idx);
+            sc_trace(tf, trace_r_imag[i], "r_imag_" + idx);
+            
+            sc_trace(tf, mem_write_chans[i].aw.val, "aw_val_" + idx);
+            sc_trace(tf, mem_write_chans[i].aw.rdy, "aw_rdy_" + idx);
+            sc_trace(tf, trace_aw_addr[i], "aw_addr_" + idx);
+            
+            sc_trace(tf, mem_write_chans[i].w.val, "w_val_" + idx);
+            sc_trace(tf, mem_write_chans[i].w.rdy, "w_rdy_" + idx);
+            sc_trace(tf, trace_w_real[i], "w_real_" + idx);
+            sc_trace(tf, trace_w_imag[i], "w_imag_" + idx);
+            
+            sc_trace(tf, mem_write_chans[i].b.val, "b_val_" + idx);
+            sc_trace(tf, mem_write_chans[i].b.rdy, "b_rdy_" + idx);
         }
     }
 
@@ -149,7 +169,13 @@ SC_MODULE(Testbench) {
         sc_close_vcd_trace_file(tf);
         delete fft_sys;
         delete mem;
-        delete mon;
+        
+        delete[] trace_ar_addr;
+        delete[] trace_r_real;
+        delete[] trace_r_imag;
+        delete[] trace_aw_addr;
+        delete[] trace_w_real;
+        delete[] trace_w_imag;
     }
 
     int cycle_cnt = 0;
@@ -157,59 +183,244 @@ SC_MODULE(Testbench) {
         cycle_count.write(cycle_cnt++);
     }
 
-    // Combinational method to map AXI read handshakes to Monitor inputs
-    void update_monitor_addrs() {
-        for (int i = 0; i < NUM_CORES; i++) {
-            if (mem_read_chans[i].ar.vld.read() && mem_read_chans[i].ar.rdy.read()) {
-                tb_mem_raddrs[i].write(mem_read_chans[i].ar.msg.read().addr);
+    // Unpack process that writes raw bits to separate real/imag/addr signals for wave tracing
+    void trace_unpack_process() {
+        static const int HALF_WIDTH = AxiCfg::dataWidth / 2;
+        for (int i = 0; i < NUM_CORES; ++i) {
+            // Unpack Read Address (AR)
+            if (mem_read_chans[i].ar.val.read()) {
+                auto ar_pay = BitsToType<typename axi4<AxiCfg>::AddrPayload>(mem_read_chans[i].ar.msg.read());
+                trace_ar_addr[i].write(ar_pay.addr.to_uint());
+            } else {
+                trace_ar_addr[i].write(0);
+            }
+
+            // Unpack Read Data (R)
+            if (mem_read_chans[i].r.val.read()) {
+                auto r_pay = BitsToType<typename axi4<AxiCfg>::ReadPayload>(mem_read_chans[i].r.msg.read());
+                sc_uint<AxiCfg::dataWidth> raw = r_pay.data;
+                if (AxiCfg::dataWidth == 64) {
+                    int r_int = raw.range(AxiCfg::dataWidth - 1, HALF_WIDTH).to_int();
+                    int i_int = raw.range(HALF_WIDTH - 1, 0).to_int();
+                    trace_r_real[i].write((double)r_int);
+                    trace_r_imag[i].write((double)i_int);
+                } else {
+                    int r_int = raw.range(AxiCfg::dataWidth - 1, 0).to_int();
+                    trace_r_real[i].write((double)r_int);
+                    trace_r_imag[i].write(0.0);
+                }
+            } else {
+                trace_r_real[i].write(0.0);
+                trace_r_imag[i].write(0.0);
+            }
+
+            // Unpack Write Address (AW)
+            if (mem_write_chans[i].aw.val.read()) {
+                auto aw_pay = BitsToType<typename axi4<AxiCfg>::AddrPayload>(mem_write_chans[i].aw.msg.read());
+                trace_aw_addr[i].write(aw_pay.addr.to_uint());
+            } else {
+                trace_aw_addr[i].write(0);
+            }
+
+            // Unpack Write Data (W)
+            if (mem_write_chans[i].w.val.read()) {
+                auto w_pay = BitsToType<typename axi4<AxiCfg>::WritePayload>(mem_write_chans[i].w.msg.read());
+                sc_uint<AxiCfg::dataWidth> raw = w_pay.data;
+                if (AxiCfg::dataWidth == 64) {
+                    int r_int = raw.range(AxiCfg::dataWidth - 1, HALF_WIDTH).to_int();
+                    int i_int = raw.range(HALF_WIDTH - 1, 0).to_int();
+                    trace_w_real[i].write((double)r_int);
+                    trace_w_imag[i].write((double)i_int);
+                } else {
+                    int r_int = raw.range(AxiCfg::dataWidth - 1, 0).to_int();
+                    trace_w_real[i].write((double)r_int);
+                    trace_w_imag[i].write(0.0);
+                }
+            } else {
+                trace_w_real[i].write(0.0);
+                trace_w_imag[i].write(0.0);
             }
         }
     }
 
+    // Monitor method checking channels on positive clock edges
+    void monitor_process() {
+        static const int HALF_WIDTH = AxiCfg::dataWidth / 2;
+        // Monitor DMA read address handshakes
+        for (int i = 0; i < NUM_CORES; i++) {
+            if (mem_read_chans[i].ar.val.read() && mem_read_chans[i].ar.rdy.read()) {
+                auto ar_pay = BitsToType<typename axi4<AxiCfg>::AddrPayload>(mem_read_chans[i].ar.msg.read());
+                sc_uint<ADDR_WIDTH> addr = ar_pay.addr;
+                if (addr != last_addr[i]) {
+                    std::cout << "DEBUG DMA[" << i << "] Read Addr: " << addr << " @ " << sc_time_stamp() << std::endl;
+                    last_addr[i] = addr;
+                }
+            }
+        }
+        
+        // Track AW handshakes in queues
+        for (int i = 0; i < NUM_CORES; i++) {
+            if (mem_write_chans[i].aw.val.read() && mem_write_chans[i].aw.rdy.read()) {
+                auto aw_pay = BitsToType<typename axi4<AxiCfg>::AddrPayload>(mem_write_chans[i].aw.msg.read());
+                aw_addr_queue[i].push(aw_pay.addr.to_uint());
+            }
+        }
+        
+        // Monitor Core output write backs on W handshakes
+        for (int i = 0; i < NUM_CORES; i++) {
+            if (mem_write_chans[i].w.val.read() && mem_write_chans[i].w.rdy.read()) {
+                unsigned int addr = 0;
+                if (!aw_addr_queue[i].empty()) {
+                    addr = aw_addr_queue[i].front();
+                    aw_addr_queue[i].pop();
+                } else {
+                    addr = base_addrs[i].read() + N;
+                }
+                
+                int index = addr - (base_addrs[i].read() + N);
+                
+                auto w_pay = BitsToType<typename axi4<AxiCfg>::WritePayload>(mem_write_chans[i].w.msg.read());
+                sc_uint<AxiCfg::dataWidth> raw = w_pay.data;
+                double r, imag_val;
+                if (AxiCfg::dataWidth == 64) {
+                    int r_int = raw.range(AxiCfg::dataWidth - 1, HALF_WIDTH).to_int();
+                    int i_int = raw.range(HALF_WIDTH - 1, 0).to_int();
+                    r = (double)r_int;
+                    imag_val = (double)i_int;
+                } else {
+                    int r_int = raw.range(AxiCfg::dataWidth - 1, 0).to_int();
+                    r = (double)r_int;
+                    imag_val = 0.0;
+                }
+                
+                std::cout << "@" << std::setw(5) << sc_time_stamp() 
+                          << " [Core " << i << "] Out[" << std::setw(2) << index << "] = " 
+                          << complex_t(r, imag_val) << std::endl;
+            }
+        }
+    }
+
+    // Unpacker helper for complex variables
+    complex_t unpack_complex(sc_uint<AxiCfg::dataWidth> raw) {
+        static const int HALF_WIDTH = AxiCfg::dataWidth / 2;
+        if (AxiCfg::dataWidth == 64) {
+            int r_int = raw.range(AxiCfg::dataWidth - 1, HALF_WIDTH).to_int();
+            int i_int = raw.range(HALF_WIDTH - 1, 0).to_int();
+            return complex_t((double)r_int, (double)i_int);
+        } else {
+            int r_int = raw.range(AxiCfg::dataWidth - 1, 0).to_int();
+            return complex_t((double)r_int, 0.0);
+        }
+    }
+
     // Helper to perform an AXI Write Handshake
-    void axi_write(unsigned int addr, sc_uint<64> data) {
-        // Drive Address
-        axi::AddrPayload<AxiCfg> aw_pay;
+    void axi_write(unsigned int addr, sc_uint<AxiCfg::dataWidth> data) {
+        typename axi4<AxiCfg>::AddrPayload aw_pay;
         aw_pay.addr = addr;
         aw_pay.id = 0;
         aw_pay.len = 0;
-        aw_pay.size = 0;
-        aw_pay.burst = 0;
-        mem_write_chans[NUM_CORES].aw.msg.write(aw_pay);
-        mem_write_chans[NUM_CORES].aw.vld.write(true);
-
-        // Drive Data
-        axi::WritePayload<AxiCfg> w_pay;
-        w_pay.data = data;
-        w_pay.strb = 0xFF;
-        w_pay.last = true;
-        mem_write_chans[NUM_CORES].w.msg.write(w_pay);
-        mem_write_chans[NUM_CORES].w.vld.write(true);
-
-        mem_write_chans[NUM_CORES].b.rdy.write(true);
-
-        wait(); // Advance 1 cycle to let handshakes evaluate
-        while (!(mem_write_chans[NUM_CORES].aw.rdy.read() && mem_write_chans[NUM_CORES].w.rdy.read())) {
-            wait();
-        }
+        aw_pay.size = (AxiCfg::dataWidth == 64) ? 3 : 2;
+        aw_pay.burst = 1; // INCR
         
-        // Deassert valids
-        mem_write_chans[NUM_CORES].aw.vld.write(false);
-        mem_write_chans[NUM_CORES].w.vld.write(false);
+        typename axi4<AxiCfg>::WritePayload w_pay;
+        w_pay.data = data;
+        w_pay.wstrb = ~0;
+        w_pay.last = true;
+        
+        tb_write_master.write(aw_pay, w_pay);
+    }
+
+    // Mathematical verification helper
+    std::vector<complex_t> compute_dft(const std::vector<complex_t>& input) {
+        int size = input.size();
+        std::vector<complex_t> output(size);
+        const double PI = 3.14159265358979323846;
+        for (int k = 0; k < size; ++k) {
+            complex_t sum(0, 0);
+            for (int n = 0; n < size; ++n) {
+                double angle = -2.0 * PI * k * n / size;
+                complex_t w(cos(angle), sin(angle));
+                sum = sum + input[n] * w;
+            }
+            output[k] = sum;
+        }
+        return output;
+    }
+
+    int bit_reverse(int index, int bits) {
+        int rev = 0;
+        for (int i = 0; i < bits; ++i) {
+            if ((index & (1 << i)) != 0) {
+                rev |= (1 << (bits - 1 - i));
+            }
+        }
+        return rev;
+    }
+
+    bool verify_fft_output(int core_idx, int start_addr, int len) {
+        int aligned_len = ((len + N - 1) / N) * N;
+        
+        // Read inputs from memory, padding with zeros up to aligned block boundary
+        std::vector<complex_t> inputs(aligned_len);
+        for (int i = 0; i < aligned_len; ++i) {
+            if (i < len) {
+                sc_uint<AxiCfg::dataWidth> raw = mem->mem[start_addr + i];
+                inputs[i] = unpack_complex(raw);
+            } else {
+                inputs[i] = complex_t(0.0, 0.0);
+            }
+        }
+
+        // Compute golden DFT block by block
+        std::vector<complex_t> expected(aligned_len);
+        int num_blocks = aligned_len / N;
+        int bits = (int)std::log2(N);
+        for (int b = 0; b < num_blocks; ++b) {
+            std::vector<complex_t> block_in(N);
+            for (int i = 0; i < N; ++i) {
+                block_in[i] = inputs[b * N + i];
+            }
+            std::vector<complex_t> block_out = compute_dft(block_in);
+            for (int i = 0; i < N; ++i) {
+                int rev_i = bit_reverse(i, bits);
+                expected[b * N + rev_i] = block_out[i];
+            }
+        }
+
+        // Compare with memory outputs starting at start_addr + N
+        bool pass = true;
+        std::cout << "Core " << core_idx << " Verification (Base Addr: " << start_addr + N << "):" << std::endl;
+        for (int i = 0; i < len; ++i) {
+            sc_uint<AxiCfg::dataWidth> raw = mem->mem[start_addr + N + i];
+            complex_t actual = unpack_complex(raw);
+            complex_t exp = expected[i];
+            
+            double diff_real = std::abs(actual.real - exp.real);
+            double diff_imag = std::abs(actual.imag - exp.imag);
+            bool match = (diff_real < 1e-2) && (diff_imag < 1e-2);
+            
+            std::cout << "  Addr[" << start_addr + N + i << "]: Actual=" << actual 
+                      << " Expected=" << exp;
+            if (match) {
+                std::cout << " [OK]" << std::endl;
+            } else {
+                std::cout << " [MISMATCH]" << std::endl;
+                pass = false;
+            }
+        }
+        return pass;
     }
 
     // Source thread for driving test stimulus
     void source_thread() {
-        mem_write_chans[NUM_CORES].aw.vld.write(false);
-        mem_write_chans[NUM_CORES].w.vld.write(false);
-        mem_write_chans[NUM_CORES].b.rdy.write(true);
+        tb_write_master.reset();
         start_signal.write(false);
-        
         for(int i=0; i<NUM_CORES; i++) {
             base_addrs[i].write(1023); 
             num_samples[i].write(0);
+            last_addr[i] = 0xFFF; // Initialize to dummy address to trigger first print
         }
-
+        
         // ====================================================================
         // TEST CASE 1: Standard Operation (Baseline)
         // ====================================================================
@@ -222,14 +433,13 @@ SC_MODULE(Testbench) {
         wait();
 
         std::cout << "@" << sc_time_stamp() << " Initializing Memory..." << std::endl;
-        
-        for (int i = 0; i < 4 * N; i++) {
+        for (int i = 0; i < NUM_CORES * 2 * N; i++) {
             axi_write(i, pack_complex((double)i, 0));
         }
         wait(5);
         
         for(int i=0; i<NUM_CORES; i++) {
-            base_addrs[i].write(i * N); 
+            base_addrs[i].write(i * 2 * N); 
             num_samples[i].write(N);
         }
         
@@ -241,24 +451,14 @@ SC_MODULE(Testbench) {
         wait(2000);
 
         std::cout << "\nMemory Verification..." << std::endl;
+        bool t1_pass = true;
         for (int c = 0; c < NUM_CORES; ++c) {
-            int base = c * N;
-            std::cout << "Core " << c << " Memory (Addresses " << base + N << " to " << base + N + N - 1 << "):" << std::endl;
-            for (int k = 0; k < N; ++k) {
-                sc_uint<DATA_WIDTH> raw = mem->mem[base + N + k];
-                double r, i;
-                if (DATA_WIDTH == 64) {
-                    int r_int = raw.range(63, 32).to_int();
-                    int i_int = raw.range(31, 0).to_int();
-                    r = (double)r_int;
-                    i = (double)i_int;
-                } else {
-                    int r_int = raw.range(31, 0).to_int();
-                    r = (double)r_int;
-                    i = 0.0;
-                }
-                std::cout << "Mem[" << base + N + k << "] = (" << r << " + " << i << "j)" << std::endl;
-            }
+            t1_pass &= verify_fft_output(c, c * 2 * N, N);
+        }
+        if (t1_pass) {
+            std::cout << "[TEST 1] PASSED." << std::endl;
+        } else {
+            std::cout << "[TEST 1] FAILED." << std::endl;
         }
         std::cout << "[TEST 1] Finished." << std::endl;
 
@@ -275,24 +475,14 @@ SC_MODULE(Testbench) {
         wait(2000);
 
         std::cout << "\nMemory Verification..." << std::endl;
+        bool t2_pass = true;
         for (int c = 0; c < NUM_CORES; ++c) {
-            int base = c * N;
-            std::cout << "Core " << c << " Memory (Addresses " << base + N << " to " << base + N + N - 1 << "):" << std::endl;
-            for (int k = 0; k < N; ++k) {
-                sc_uint<DATA_WIDTH> raw = mem->mem[base + N + k];
-                double r, i;
-                if (DATA_WIDTH == 64) {
-                    int r_int = raw.range(63, 32).to_int();
-                    int i_int = raw.range(31, 0).to_int();
-                    r = (double)r_int;
-                    i = (double)i_int;
-                } else {
-                    int r_int = raw.range(31, 0).to_int();
-                    r = (double)r_int;
-                    i = 0.0;
-                }
-                std::cout << "Mem[" << base + N + k << "] = (" << r << " + " << i << "j)" << std::endl;
-            }
+            t2_pass &= verify_fft_output(c, c * 2 * N, N);
+        }
+        if (t2_pass) {
+            std::cout << "[TEST 2] PASSED." << std::endl;
+        } else {
+            std::cout << "[TEST 2] FAILED." << std::endl;
         }
         std::cout << "[TEST 2] Finished." << std::endl;
 
@@ -302,7 +492,7 @@ SC_MODULE(Testbench) {
         std::cout << "\n[TEST 3] Mid-flight Reset..." << std::endl;
         
         for(int i=0; i<NUM_CORES; i++) {
-            base_addrs[i].write(i * N); 
+            base_addrs[i].write(i * 2 * N); 
             num_samples[i].write(N);
         }
         start_signal.write(true);
@@ -318,7 +508,7 @@ SC_MODULE(Testbench) {
         wait();
         
         std::cout << "@" << sc_time_stamp() << " Re-initializing Memory after Reset..." << std::endl;
-        for (int i = 0; i < 4 * N; i++) { 
+        for (int i = 0; i < NUM_CORES * 2 * N; i++) { 
             axi_write(i, pack_complex((double)i, (double)i*0.5));
         }
         wait();
@@ -350,8 +540,19 @@ SC_MODULE(Testbench) {
         // ====================================================================
         std::cout << "\n[TEST 5] Dynamic Reconfiguration..." << std::endl;
         
+        rst.write(true);
+        wait(5);
+        rst.write(false);
+        wait();
+
+        std::cout << "@" << sc_time_stamp() << " Re-initializing Memory for Test 5..." << std::endl;
+        for (int i = 0; i < (4 + NUM_CORES * 2) * N; i++) {
+            axi_write(i, pack_complex((double)i, (double)i*0.5));
+        }
+        wait(5);
+
         for(int i=0; i<NUM_CORES; i++) {
-            base_addrs[i].write((2 + i) * N); 
+            base_addrs[i].write((2 + i * 2) * N); 
         }
         
         std::cout << "@" << sc_time_stamp() << " Triggering Start (New Config)..." << std::endl;
@@ -360,6 +561,17 @@ SC_MODULE(Testbench) {
         start_signal.write(false);
         
         wait(2000);
+
+        std::cout << "\nMemory Verification..." << std::endl;
+        bool t5_pass = true;
+        for (int c = 0; c < NUM_CORES; ++c) {
+            t5_pass &= verify_fft_output(c, base_addrs[c].read().to_uint(), N);
+        }
+        if (t5_pass) {
+            std::cout << "[TEST 5] PASSED." << std::endl;
+        } else {
+            std::cout << "[TEST 5] FAILED." << std::endl;
+        }
         std::cout << "[TEST 5] Finished." << std::endl;
 
         // ====================================================================
@@ -367,8 +579,19 @@ SC_MODULE(Testbench) {
         // ====================================================================
         std::cout << "\n[TEST 6] Partial Input..." << std::endl;
         
+        rst.write(true);
+        wait(5);
+        rst.write(false);
+        wait();
+
+        std::cout << "@" << sc_time_stamp() << " Re-initializing Memory for Test 6..." << std::endl;
+        for (int i = 0; i < NUM_CORES * 2 * N; i++) {
+            axi_write(i, pack_complex((double)i, 0.0));
+        }
+        wait(5);
+
         for(int i=0; i<NUM_CORES; i++) {
-            base_addrs[i].write(i * N); 
+            base_addrs[i].write(i * 2 * N); 
             num_samples[i].write( (i==0) ? N : (N/2) );
         }
         
@@ -378,6 +601,17 @@ SC_MODULE(Testbench) {
         start_signal.write(false);
         
         wait(2000);
+
+        std::cout << "\nMemory Verification..." << std::endl;
+        bool t6_pass = true;
+        for (int c = 0; c < NUM_CORES; ++c) {
+            t6_pass &= verify_fft_output(c, base_addrs[c].read().to_uint(), num_samples[c].read());
+        }
+        if (t6_pass) {
+            std::cout << "[TEST 6] PASSED." << std::endl;
+        } else {
+            std::cout << "[TEST 6] FAILED." << std::endl;
+        }
         std::cout << "[TEST 6] Finished." << std::endl;
 
         // ====================================================================
@@ -391,7 +625,7 @@ SC_MODULE(Testbench) {
         wait();
 
         std::cout << "@" << sc_time_stamp() << " Initializing Memory for Stream..." << std::endl;
-        for (int i = 0; i < 20 * N; i++) {
+        for (int i = 0; i < 24 * NUM_CORES; i++) {
             axi_write(i, pack_complex((double)i, (double)i*0.5));
         }
         wait();
@@ -399,7 +633,7 @@ SC_MODULE(Testbench) {
         std::cout << "@" << sc_time_stamp() << " Triggering Start (Continuous Stream)..." << std::endl;
         
         for(int i=0; i<NUM_CORES; i++) {
-            base_addrs[i].write(i * N); 
+            base_addrs[i].write(i * 24); 
             num_samples[i].write(10); 
         }
 
@@ -408,7 +642,17 @@ SC_MODULE(Testbench) {
         start_signal.write(false);
         
         wait(200); 
-        
+
+        std::cout << "\nMemory Verification (Core 0 Block 1, Untouched by Overlap)..." << std::endl;
+        bool t7_pass = true;
+        for (int c = 0; c < NUM_CORES; ++c) {
+            t7_pass &= verify_fft_output(c, c * 24, N);
+        }
+        if (t7_pass) {
+            std::cout << "[TEST 7] PASSED." << std::endl;
+        } else {
+            std::cout << "[TEST 7] FAILED." << std::endl;
+        }
         std::cout << "[TEST 7] Finished." << std::endl;
         
         // ====================================================================
@@ -416,7 +660,7 @@ SC_MODULE(Testbench) {
         // ====================================================================
         std::cout << "\n[TEST 8] Zero-length Input (Edge Case)..." << std::endl;
         for(int i=0; i<NUM_CORES; i++) {
-            base_addrs[i].write(i * N); 
+            base_addrs[i].write(i * 2 * N); 
             num_samples[i].write(0);
         }
         start_signal.write(true);
@@ -426,41 +670,27 @@ SC_MODULE(Testbench) {
         std::cout << "[TEST 8] Finished." << std::endl;
 
         // ====================================================================
-        // TEST CASE 9: Memory Verification
+        // TEST CASE 9: Memory Verification (Done dynamically in tests 1-7)
         // ====================================================================
-        std::cout << "\n[TEST 9] Memory Verification (Checking Final Output Data)..." << std::endl;
-        for (int c = 0; c < NUM_CORES; ++c) {
-            int base = c * N;
-            std::cout << "Core " << c << " Expected Output in Memory (Addresses " << base + N << " to " << base + N + N - 1 << "):" << std::endl;
-            for (int k = 0; k < N; ++k) {
-                sc_uint<DATA_WIDTH> raw = mem->mem[base + N + k];
-                double r, i;
-                if (DATA_WIDTH == 64) {
-                    int r_int = raw.range(63, 32).to_int();
-                    int i_int = raw.range(31, 0).to_int();
-                    r = (double)r_int;
-                    i = (double)i_int;
-                } else {
-                    int r_int = raw.range(31, 0).to_int();
-                    r = (double)r_int;
-                    i = 0.0;
-                }
-                std::cout << "Mem[" << base + N + k << "] = (" << r << " + " << i << "j)" << std::endl;
-            }
-        }
+        std::cout << "\n[TEST 9] Memory Verification..." << std::endl;
         std::cout << "[TEST 9] Finished." << std::endl;
         
         std::cout << "\n[ALL TESTS FINISHED] @ " << sc_time_stamp() << std::endl;
         sc_stop();
     }
 
-    // Helper method to pack real and imaginary parts into a 64-bit word
-    sc_uint<64> pack_complex(double r, double i) {
+    // Helper method to pack real and imaginary parts into a word
+    sc_uint<AxiCfg::dataWidth> pack_complex(double r, double i) {
+        static const int HALF_WIDTH = AxiCfg::dataWidth / 2;
         int r_int = (int)std::round(r);
         int i_int = (int)std::round(i);
-        sc_uint<64> res;
-        res.range(63, 32) = r_int;
-        res.range(31, 0) = i_int;
+        sc_uint<AxiCfg::dataWidth> res = 0;
+        if (AxiCfg::dataWidth == 64) {
+            res.range(AxiCfg::dataWidth - 1, HALF_WIDTH) = r_int;
+            res.range(HALF_WIDTH - 1, 0) = i_int;
+        } else {
+            res.range(AxiCfg::dataWidth - 1, 0) = r_int;
+        }
         return res;
     }
 };

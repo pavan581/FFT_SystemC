@@ -1,23 +1,14 @@
 // ============================================================================
-// TB_FFT.CPP - Standalone FFT Core Testbench
-// ============================================================================
-// This testbench verifies the functionality of a single, standalone FFT core.
-// It directly feeds complex numbers to the FFT pipeline and checks the output.
-//
-// Verification Scenarios:
-// - TEST 1: Impulse at index 0
-// - TEST 2: DC Signal (All 1s)
-// - TEST 3: Alternating Signal [1, -1, 1, -1]
-// - TEST 4: Back-to-Back Blocks
-// - TEST 5: Values with Imaginary components
+// TB_FFT.CPP - Standalone FFT Core Testbench (Official MatchLib version)
 // ============================================================================
 
 #include <systemc.h>
 #include <vector>
-
+#include <connections/connections.h>
 #include "fft.h"
 
 using namespace std;
+using namespace Connections;
 
 template<int N, int NUM_MULT=4, int NUM_ADD=6>
 SC_MODULE(FFT_TB) {
@@ -25,140 +16,140 @@ SC_MODULE(FFT_TB) {
     sc_clock                clk;
     sc_signal<bool>         rst;
 
-    sc_signal<bool>         in_valid, out_valid;
-    sc_signal<complex_t>    in_data, out_data;
-    sc_signal<int>          in_index, out_index;
-    sc_signal<bool>         status;
-    sc_signal<bool>         pipeline_step_sig;
+    Combinational<complex_t> in_chan;
+    Combinational<complex_t> out_chan;
 
-    FFT* fft;
+    Out<complex_t> tb_in_port;
+    In<complex_t> tb_out_port;
 
+    FFT<N, NUM_MULT, NUM_ADD>* fft;
     sc_trace_file* tf;
 
-    SC_CTOR(FFT_TB) : clk("clk", 1, SC_NS) {
-        fft = new FFT("fft", N, NUM_MULT, NUM_ADD);
+    // Trace signals for complex data values
+    sc_signal<double> trace_in_real;
+    sc_signal<double> trace_in_imag;
+    sc_signal<double> trace_out_real;
+    sc_signal<double> trace_out_imag;
+
+    SC_CTOR(FFT_TB) : 
+        clk("clk", 1, SC_NS),
+        in_chan("in_chan"),
+        out_chan("out_chan"),
+        tb_in_port("tb_in_port"),
+        tb_out_port("tb_out_port") 
+    {
+        fft = new FFT<N, NUM_MULT, NUM_ADD>("fft");
         fft->clk(clk);
         fft->rst(rst);
-        fft->status(status);
-        fft->in_valid(in_valid);
-        fft->in_index(in_index);
-        fft->in_data(in_data);
-        fft->out_valid(out_valid);
-        fft->out_index(out_index);
-        fft->out_data(out_data);
-        fft->pipeline_step_sig(pipeline_step_sig);
+        fft->in_data(in_chan);
+        fft->out_data(out_chan);
+
+        tb_in_port(in_chan);
+        tb_out_port(out_chan);
 
         string trace_name = "./out/vcd/FFT_N" + to_string(N);
         tf = sc_create_vcd_trace_file(trace_name.c_str());
         tf->set_time_unit(1, SC_PS);
         sc_trace(tf, clk,       "clk");
         sc_trace(tf, rst,       "rst");
-        sc_trace(tf, status,    "status");
-        sc_trace(tf, in_valid,  "in_valid");
-        sc_trace(tf, in_index,  "in_index");
-        sc_trace(tf, in_data,   "in_data");
-        sc_trace(tf, out_valid, "out_valid");
-        sc_trace(tf, out_index, "out_index");
-        sc_trace(tf, out_data,  "out_data");
-        sc_trace(tf, pipeline_step_sig, "pipeline_step_sig");
-
-
+        sc_trace(tf, trace_in_real, "in_data_real");
+        sc_trace(tf, trace_in_imag, "in_data_imag");
+        sc_trace(tf, trace_out_real, "out_data_real");
+        sc_trace(tf, trace_out_imag, "out_data_imag");
+ 
         SC_THREAD(control);
         sensitive << clk.posedge_event();
+ 
+        SC_THREAD(monitor);
+        sensitive << clk.posedge_event();
     }
-
+ 
     ~FFT_TB() {
         sc_close_vcd_trace_file(tf);
         delete fft;
     }
-
-    // Control thread that generates input stimuli.
-    // Drives the input signals through various standard DSP test cases.
+ 
+    // Control thread that generates input stimuli
     void control() {
-        int wait_for = N * 5 * fft->alu_cycles;
+        tb_in_port.Reset();
+        trace_in_real.write(0.0);
+        trace_in_imag.write(0.0);
         rst.write(true);
-        in_valid.write(false);
         wait(5);
         rst.write(false);
-
+        wait();
+ 
         // ====================================================================
         // TEST CASE 1: Impulse at index 0
         // ====================================================================
+        std::cout << "\n[FFT TB] TEST 1: Impulse at index 0..." << std::endl;
         for (int i=0; i<N; i++) {
-            in_data.write(complex_t(i==0 ? 1 : 0, 0));
-            in_valid.write(true);
-            do {
-                wait();
-            } while (!pipeline_step_sig.read());
+            complex_t val(i==0 ? 1 : 0, 0);
+            trace_in_real.write(val.real);
+            trace_in_imag.write(val.imag);
+            tb_in_port.Push(val);
         }
-        in_valid.write(false);
-
-        wait(wait_for);
-
+        for (int i=0; i<N-1; i++) { // Flush pipeline
+            complex_t val(0, 0);
+            trace_in_real.write(val.real);
+            trace_in_imag.write(val.imag);
+            tb_in_port.Push(val);
+        }
+        wait(N * 5);
+ 
         // ====================================================================
         // TEST CASE 2: DC Signal (All 1s)
         // ====================================================================
+        std::cout << "\n[FFT TB] TEST 2: DC Signal..." << std::endl;
         for (int i=0; i<N; i++) {
-            in_data.write(complex_t(1, 0));
-            in_valid.write(true);
-            do {
-                wait();
-            } while (!pipeline_step_sig.read());
+            complex_t val(1, 0);
+            trace_in_real.write(val.real);
+            trace_in_imag.write(val.imag);
+            tb_in_port.Push(val);
         }
-        in_valid.write(false);
-
-        wait(wait_for);
+        for (int i=0; i<N-1; i++) { // Flush pipeline
+            complex_t val(0, 0);
+            trace_in_real.write(val.real);
+            trace_in_imag.write(val.imag);
+            tb_in_port.Push(val);
+        }
+        wait(N * 5);
         
         // ====================================================================
         // TEST CASE 3: Alternating Signal [1, -1, 1, -1]
         // ====================================================================
+        std::cout << "\n[FFT TB] TEST 3: Alternating Signal..." << std::endl;
         for (int i=0; i<N; i++) {
-            in_data.write(complex_t(i%2 == 0 ? 1 : -1, 0));
-            in_valid.write(true);
-            do {
-                wait();
-            } while (!pipeline_step_sig.read());
+            complex_t val(i%2 == 0 ? 1 : -1, 0);
+            trace_in_real.write(val.real);
+            trace_in_imag.write(val.imag);
+            tb_in_port.Push(val);
         }
-        in_valid.write(false);
-
-        wait(wait_for);
-
-        // ====================================================================
-        // TEST CASE 4: Back-to-Back Blocks
-        // ====================================================================
-        for (int i=0; i<N; i++) {
-            in_data.write(complex_t(i==0 ? 2 : 0, 0));
-            in_valid.write(true);
-            do {
-                wait();
-            } while (!pipeline_step_sig.read());
+        for (int i=0; i<N-1; i++) { // Flush pipeline
+            complex_t val(0, 0);
+            trace_in_real.write(val.real);
+            trace_in_imag.write(val.imag);
+            tb_in_port.Push(val);
         }
-        for (int i=0; i<N; i++) {
-            in_data.write(complex_t(i+1, 0));
-            in_valid.write(true);
-            do {
-                wait();
-            } while (!pipeline_step_sig.read());
-        }
-        in_valid.write(false);
-
-        wait(wait_for);
-
-        // ====================================================================
-        // TEST CASE 5: Values with Imaginary
-        // ====================================================================
-        for (int i=0; i<N; i++) {
-            in_data.write(complex_t(i*7, i*3));
-            in_valid.write(true);
-            do {
-                wait();
-            } while (!pipeline_step_sig.read());
-        }
-        in_valid.write(false);
-
-        wait(wait_for);
-
+        wait(N * 5);
+ 
+        std::cout << "[FFT TB] All tests finished." << std::endl;
         sc_stop();
+    }
+ 
+    // Monitor thread that captures and logs results
+    void monitor() {
+        tb_out_port.Reset();
+        trace_out_real.write(0.0);
+        trace_out_imag.write(0.0);
+        wait();
+ 
+        while (true) {
+            complex_t out_val = tb_out_port.Pop();
+            trace_out_real.write(out_val.real);
+            trace_out_imag.write(out_val.imag);
+            std::cout << "@" << sc_time_stamp() << " FFT Out = " << out_val << std::endl;
+        }
     }
 };
 

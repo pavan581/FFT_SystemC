@@ -17,7 +17,7 @@ INCDIRS += -I$(AC_TYPES)/include
 INCDIRS += -I$(AC_SIMUTILS)/include
 INCDIRS += -I$(MATCHLIB_EXAMPLES)/include
 
-CXXFLAGS = -std=c++17 $(INCDIRS) -DSC_ALLOW_DEPRECATED_IEEE_API
+CXXFLAGS = -std=c++17 $(INCDIRS) -DSC_ALLOW_DEPRECATED_IEEE_API -DSC_INCLUDE_DYNAMIC_PROCESSES
 LDFLAGS = -L$(SYSTEMC_LIB) -lsystemc -lm
 
 # Build directory
@@ -86,5 +86,7 @@ $(FFT_TB_TARGET): $(BUILD_DIR) $(FFT_TB_OBJS)
 
 run_fft_tb: $(FFT_TB_TARGET) $(OUT_DIR)
 	@echo "Running FFT testbench..."
-	@$(FFT_TB_TARGET)
+	@echo "Output will be saved to: $(OUT_DIR)/log/sim_fft_tb.txt"
+	@echo ""
+	@$(FFT_TB_TARGET) | tee $(OUT_DIR)/log/sim_fft_tb.txt
 

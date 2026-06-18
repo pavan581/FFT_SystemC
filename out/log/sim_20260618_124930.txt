@@ -1,0 +1,146 @@
+Starting Interleaved FFT Simulation (Refactored)
+
+Info: (I703) tracing timescale unit set: 1 ps (./out/vcd/InterleavedFFT-DMA_N4_C2_H1_M4_A6_axi.vcd)
+Connections Clock: tb.clk Period: 1 ns
+
+[TEST 1] Standard Operation (N=4, Cores=2)...
+@6 ns Initializing Memory...
+@59 ns Triggering Start...
+DEBUG DMA[0] Read Addr: 0 @ 63 ns
+DEBUG DMA[1] Read Addr: 4 @ 63 ns
+DEBUG DMA[0] Read Addr: 1 @ 65 ns
+DEBUG DMA[1] Read Addr: 5 @ 65 ns
+DEBUG DMA[0] Read Addr: 2 @ 67 ns
+DEBUG DMA[1] Read Addr: 6 @ 67 ns
+DEBUG DMA[0] Read Addr: 3 @ 69 ns
+DEBUG DMA[1] Read Addr: 7 @ 69 ns
+
+Memory Verification...
+Core 0 Memory (Addresses 4 to 7):
+Mem[4] = (6 + 0j)
+Mem[5] = (-2 + 0j)
+Mem[6] = (-2 + 2j)
+Mem[7] = (-2 + -2j)
+Core 1 Memory (Addresses 8 to 11):
+Mem[8] = (22 + 0j)
+Mem[9] = (-2 + 0j)
+Mem[10] = (-2 + 2j)
+Mem[11] = (-2 + -2j)
+[TEST 1] Finished.
+
+[TEST 2] Consecutive Starts...
+@2060 ns Triggering Start (Run 2)...
+DEBUG DMA[0] Read Addr: 0 @ 2063 ns
+DEBUG DMA[0] Read Addr: 1 @ 2065 ns
+DEBUG DMA[1] Read Addr: 4 @ 2065 ns
+DEBUG DMA[0] Read Addr: 2 @ 2067 ns
+DEBUG DMA[1] Read Addr: 5 @ 2067 ns
+DEBUG DMA[0] Read Addr: 3 @ 2069 ns
+DEBUG DMA[1] Read Addr: 6 @ 2069 ns
+DEBUG DMA[1] Read Addr: 7 @ 2071 ns
+
+Memory Verification...
+Core 0 Memory (Addresses 4 to 7):
+Mem[4] = (6 + 0j)
+Mem[5] = (-2 + 0j)
+Mem[6] = (-2 + 2j)
+Mem[7] = (-2 + -2j)
+Core 1 Memory (Addresses 8 to 11):
+Mem[8] = (0 + 0j)
+Mem[9] = (8 + 4j)
+Mem[10] = (10 + -2j)
+Mem[11] = (6 + -2j)
+[TEST 2] Finished.
+
+[TEST 3] Mid-flight Reset...
+DEBUG DMA[0] Read Addr: 0 @ 4065 ns
+DEBUG DMA[1] Read Addr: 4 @ 4065 ns
+DEBUG DMA[0] Read Addr: 1 @ 4067 ns
+DEBUG DMA[1] Read Addr: 5 @ 4067 ns
+DEBUG DMA[0] Read Addr: 2 @ 4069 ns
+DEBUG DMA[1] Read Addr: 6 @ 4069 ns
+DEBUG DMA[0] Read Addr: 3 @ 4071 ns
+DEBUG DMA[1] Read Addr: 7 @ 4071 ns
+@4071 ns Asserting Reset!
+@4073 ns Re-initializing Memory after Reset...
+[TEST 3] Finished.
+
+[TEST 4] Mid-flight Restart...
+DEBUG DMA[0] Read Addr: 0 @ 6126 ns
+DEBUG DMA[1] Read Addr: 4 @ 6127 ns
+DEBUG DMA[0] Read Addr: 1 @ 6128 ns
+DEBUG DMA[1] Read Addr: 5 @ 6129 ns
+DEBUG DMA[0] Read Addr: 2 @ 6130 ns
+DEBUG DMA[1] Read Addr: 6 @ 6131 ns
+DEBUG DMA[0] Read Addr: 3 @ 6132 ns
+@6132 ns Pulsing Start AGAIN (Intrusion)...
+DEBUG DMA[1] Read Addr: 7 @ 6133 ns
+[TEST 4] Finished.
+
+[TEST 5] Dynamic Reconfiguration...
+@8133 ns Triggering Start (New Config)...
+DEBUG DMA[0] Read Addr: 8 @ 8137 ns
+DEBUG DMA[1] Read Addr: 12 @ 8138 ns
+DEBUG DMA[0] Read Addr: 9 @ 8139 ns
+DEBUG DMA[1] Read Addr: 13 @ 8140 ns
+DEBUG DMA[0] Read Addr: 10 @ 8141 ns
+DEBUG DMA[1] Read Addr: 14 @ 8142 ns
+DEBUG DMA[0] Read Addr: 11 @ 8143 ns
+DEBUG DMA[1] Read Addr: 15 @ 8144 ns
+[TEST 5] Finished.
+
+[TEST 6] Partial Input...
+@10134 ns Triggering Start (Partial Inputs)...
+DEBUG DMA[0] Read Addr: 0 @ 10138 ns
+DEBUG DMA[1] Read Addr: 4 @ 10139 ns
+DEBUG DMA[0] Read Addr: 1 @ 10140 ns
+DEBUG DMA[1] Read Addr: 5 @ 10141 ns
+DEBUG DMA[0] Read Addr: 2 @ 10142 ns
+DEBUG DMA[0] Read Addr: 3 @ 10144 ns
+[TEST 6] Finished.
+
+[TEST 7] Continuous Stream (10 inputs for N=4)...
+@12141 ns Initializing Memory for Stream...
+@12382 ns Triggering Start (Continuous Stream)...
+DEBUG DMA[0] Read Addr: 0 @ 12386 ns
+DEBUG DMA[1] Read Addr: 4 @ 12387 ns
+DEBUG DMA[0] Read Addr: 1 @ 12388 ns
+DEBUG DMA[1] Read Addr: 5 @ 12389 ns
+DEBUG DMA[0] Read Addr: 2 @ 12390 ns
+DEBUG DMA[1] Read Addr: 6 @ 12391 ns
+DEBUG DMA[0] Read Addr: 3 @ 12392 ns
+DEBUG DMA[1] Read Addr: 7 @ 12393 ns
+DEBUG DMA[0] Read Addr: 4 @ 12394 ns
+DEBUG DMA[1] Read Addr: 8 @ 12395 ns
+DEBUG DMA[0] Read Addr: 5 @ 12396 ns
+DEBUG DMA[1] Read Addr: 9 @ 12397 ns
+DEBUG DMA[0] Read Addr: 6 @ 12398 ns
+DEBUG DMA[1] Read Addr: 10 @ 12399 ns
+DEBUG DMA[0] Read Addr: 7 @ 12400 ns
+DEBUG DMA[1] Read Addr: 11 @ 12401 ns
+DEBUG DMA[0] Read Addr: 8 @ 12402 ns
+DEBUG DMA[1] Read Addr: 12 @ 12403 ns
+DEBUG DMA[0] Read Addr: 9 @ 12404 ns
+DEBUG DMA[1] Read Addr: 13 @ 12405 ns
+[TEST 7] Finished.
+
+[TEST 8] Zero-length Input (Edge Case)...
+[TEST 8] Finished.
+
+[TEST 9] Memory Verification (Checking Final Output Data)...
+Core 0 Expected Output in Memory (Addresses 4 to 7):
+Mem[4] = (6 + 4j)
+Mem[5] = (2 + 2j)
+Mem[6] = (1 + 3j)
+Mem[7] = (3 + -1j)
+Core 1 Expected Output in Memory (Addresses 8 to 11):
+Mem[8] = (18 + 10j)
+Mem[9] = (-2 + 0j)
+Mem[10] = (-3 + 1j)
+Mem[11] = (-1 + -3j)
+[TEST 9] Finished.
+
+[ALL TESTS FINISHED] @ 12684 ns
+
+Info: /OSCI/SystemC: Simulation stopped by user.
+Simulation Finished.

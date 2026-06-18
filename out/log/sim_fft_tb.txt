@@ -1,0 +1,58 @@
+
+Info: (I703) tracing timescale unit set: 1 ps (./out/vcd/FFT_N8.vcd)
+Connections Clock: fft_tb.clk Period: 1 ns
+
+[FFT TB] TEST 1: Impulse at index 0...
+@9 ns FFT Out = real{0} imag{0} 
+@10 ns FFT Out = real{0} imag{0} 
+@11 ns FFT Out = real{0} imag{0} 
+@12 ns FFT Out = real{0} imag{0} 
+@13 ns FFT Out = real{0} imag{0} 
+@14 ns FFT Out = real{0} imag{0} 
+@15 ns FFT Out = real{0} imag{0} 
+@16 ns FFT Out = real{1} imag{0} 
+@17 ns FFT Out = real{1} imag{0} 
+@18 ns FFT Out = real{1} imag{0} 
+@19 ns FFT Out = real{1} imag{0} 
+@20 ns FFT Out = real{1} imag{0} 
+@21 ns FFT Out = real{1} imag{0} 
+@22 ns FFT Out = real{1} imag{0} 
+@23 ns FFT Out = real{1} imag{0} 
+
+[FFT TB] TEST 2: DC Signal...
+@63 ns FFT Out = real{1} imag{0} 
+@64 ns FFT Out = real{-1} imag{0} 
+@65 ns FFT Out = real{-6.12323e-17} imag{1} 
+@66 ns FFT Out = real{6.12323e-17} imag{-1} 
+@67 ns FFT Out = real{0.707107} imag{0.707107} 
+@68 ns FFT Out = real{-0.707107} imag{-0.707107} 
+@69 ns FFT Out = real{-0.707107} imag{0.707107} 
+@70 ns FFT Out = real{0.707107} imag{-0.707107} 
+@71 ns FFT Out = real{7} imag{0} 
+@72 ns FFT Out = real{1} imag{0} 
+@73 ns FFT Out = real{6.12323e-17} imag{-1} 
+@74 ns FFT Out = real{-6.12323e-17} imag{1} 
+@75 ns FFT Out = real{-0.707107} imag{-0.707107} 
+@76 ns FFT Out = real{0.707107} imag{0.707107} 
+@77 ns FFT Out = real{0.707107} imag{-0.707107} 
+
+[FFT TB] TEST 3: Alternating Signal...
+@117 ns FFT Out = real{-0.707107} imag{0.707107} 
+@118 ns FFT Out = real{0} imag{0} 
+@119 ns FFT Out = real{2} imag{0} 
+@120 ns FFT Out = real{-1} imag{-1} 
+@121 ns FFT Out = real{-1} imag{1} 
+@122 ns FFT Out = real{-0.707107} imag{0.292893} 
+@123 ns FFT Out = real{0.707107} imag{1.70711} 
+@124 ns FFT Out = real{0.707107} imag{-1.70711} 
+@125 ns FFT Out = real{-0.707107} imag{-0.292893} 
+@126 ns FFT Out = real{0} imag{0} 
+@127 ns FFT Out = real{6} imag{0} 
+@128 ns FFT Out = real{1} imag{1} 
+@129 ns FFT Out = real{1} imag{-1} 
+@130 ns FFT Out = real{0.707107} imag{-0.292893} 
+@131 ns FFT Out = real{-0.707107} imag{-1.70711} 
+[FFT TB] All tests finished.
+
+Info: /OSCI/SystemC: Simulation stopped by user.
+FFT Module Simulation Finished.
