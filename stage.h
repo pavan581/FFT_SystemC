@@ -34,7 +34,7 @@ template<int N_STAGE>
 class Stage : public StageBase {
 public:
     sc_in<bool> clk;
-    sc_in<bool> rst;
+    sc_in<bool> rst_n;
     
     In<complex_t> in_data;
     Out<complex_t> out_data;
@@ -115,7 +115,7 @@ public:
     Stage(sc_module_name name, int n_mult = 4, int n_add = 6) : 
         StageBase(name),
         clk("clk"),
-        rst("rst"),
+        rst_n("rst_n"),
         in_data("in_data"),
         out_data("out_data"),
         delay_len(N_STAGE / 2),
@@ -134,7 +134,7 @@ public:
         
         SC_THREAD(stage_thread);
         sensitive << clk.pos();
-        async_reset_signal_is(rst, true); // Active high reset
+        async_reset_signal_is(rst_n, false); // Active low reset
     }
 };
 

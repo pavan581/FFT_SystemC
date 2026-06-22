@@ -27,7 +27,7 @@ using namespace Connections;
 template<int N_SIZE, typename AxiCfg, int NUM_MULT=4, int NUM_ADD=6>
 SC_MODULE(Core) {
     sc_in<bool> clk;
-    sc_in<bool> rst;
+    sc_in<bool> rst_n; // Active-low reset
     
     // Control interface
     sc_in<bool> start;
@@ -35,9 +35,9 @@ SC_MODULE(Core) {
     sc_in<int> num_samples;
     sc_out<bool> busy;
     
-    // External AXI memory interface
-    typename axi4<AxiCfg>::read::template master<Connections::SYN_PORT> mem_read_port;
-    typename axi4<AxiCfg>::write::template master<Connections::SYN_PORT> mem_write_port;
+    // External AXI memory interface (default port types)
+    typename axi4<AxiCfg>::read::template master <> mem_read_port;
+    typename axi4<AxiCfg>::write::template master <> mem_write_port;
     
     // Inter-module channels connecting DMA <-> FFT
     Combinational<complex_t> dma_to_fft_chan;
@@ -56,7 +56,7 @@ SC_MODULE(Core) {
     {
         // DMA port bindings
         dma.clk(clk);
-        dma.rst(rst);
+        dma.rst_n(rst_n);
         dma.start(start);
         dma.base_addr(base_addr);
         dma.num_samples(num_samples);
@@ -68,7 +68,7 @@ SC_MODULE(Core) {
         
         // FFT port bindings
         fft.clk(clk);
-        fft.rst(rst);
+        fft.rst_n(rst_n); // FFT core expects active-low reset
         fft.in_data(dma_to_fft_chan);
         fft.out_data(fft_to_dma_chan);
     }

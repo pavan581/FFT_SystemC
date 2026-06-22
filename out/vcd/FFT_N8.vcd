@@ -1,5 +1,5 @@
 $date
-     Jun 18, 2026       18:12:36
+     Jun 22, 2026       16:30:21
 $end
 
 $version
@@ -12,7 +12,7 @@ $end
 
 $scope module SystemC $end
 $var wire    1  aaaaa  clk       $end
-$var wire    1  aaaab  rst       $end
+$var wire    1  aaaab  rst_n       $end
 $var real    1  aaaac  in_data_real       $end
 $var real    1  aaaad  in_data_imag       $end
 $var real    1  aaaae  out_data_real       $end
@@ -26,7 +26,7 @@ $end
 
 $dumpvars
 1aaaaa
-1aaaab
+0aaaab
 r0 aaaac
 r0 aaaad
 r0 aaaae
@@ -56,7 +56,7 @@ $end
 
 #4000
 1aaaaa
-0aaaab
+1aaaab
 
 #4500
 0aaaaa

@@ -10,7 +10,7 @@ using namespace Connections;
 template<int N, int NUM_MULT=4, int NUM_ADD=6>
 SC_MODULE(FFT_TB) {
     sc_clock                clk;
-    sc_signal<bool>         rst;
+    sc_signal<bool>         rst_n;
 
     Combinational<complex_t> in_chan;
     Combinational<complex_t> out_chan;
@@ -35,7 +35,7 @@ SC_MODULE(FFT_TB) {
     {
         fft = new FFT<N, NUM_MULT, NUM_ADD>("fft");
         fft->clk(clk);
-        fft->rst(rst);
+        fft->rst_n(rst_n);
         fft->in_data(in_chan);
         fft->out_data(out_chan);
 
@@ -46,7 +46,7 @@ SC_MODULE(FFT_TB) {
         tf = sc_create_vcd_trace_file(trace_name.c_str());
         tf->set_time_unit(1, SC_PS);
         sc_trace(tf, clk,       "clk");
-        sc_trace(tf, rst,       "rst");
+        sc_trace(tf, rst_n,     "rst_n");
         sc_trace(tf, trace_in_real, "in_data_real");
         sc_trace(tf, trace_in_imag, "in_data_imag");
         sc_trace(tf, trace_out_real, "out_data_real");
@@ -69,9 +69,9 @@ SC_MODULE(FFT_TB) {
         tb_in_port.Reset();
         trace_in_real.write(0.0);
         trace_in_imag.write(0.0);
-        rst.write(true);
+        rst_n.write(false);
         wait(5);
-        rst.write(false);
+        rst_n.write(true);
         wait();
  
         // ====================================================================

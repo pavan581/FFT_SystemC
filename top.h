@@ -24,12 +24,12 @@ using namespace axi;
 template<int N_SIZE, int NUM_CORES, int HOP_SIZE, typename AxiCfg, int NUM_MULT=4, int NUM_ADD=6>
 SC_MODULE(Top) {
     sc_in<bool> clk;
-    sc_in<bool> rst;
+    sc_in<bool> rst_n; // Active-low reset
     sc_in<bool> start;
 
-    // External AXI ports for memory access
-    sc_vector<typename axi4<AxiCfg>::read::template master<Connections::SYN_PORT>> mem_read_ports;
-    sc_vector<typename axi4<AxiCfg>::write::template master<Connections::SYN_PORT>> mem_write_ports;
+    // External AXI ports for memory access (default port types)
+    sc_vector<typename axi4<AxiCfg>::read::template master<>> mem_read_ports;
+    sc_vector<typename axi4<AxiCfg>::write::template master<>> mem_write_ports;
     
     sc_vector<sc_in<sc_uint<AxiCfg::addrWidth>>> base_addrs;
     sc_vector<sc_in<int>> num_samples; 
@@ -58,7 +58,7 @@ SC_MODULE(Top) {
     {
         for (int i = 0; i < NUM_CORES; ++i) {
             cores[i].clk(clk);
-            cores[i].rst(rst);
+            cores[i].rst_n(rst_n); // Core rst_n input is bound to rst_n
             cores[i].start(core_starts[i]);
             cores[i].base_addr(base_addrs[i]);
             cores[i].num_samples(num_samples[i]);
@@ -74,7 +74,7 @@ SC_MODULE(Top) {
 
     // Handles staggering of core launches to balance bus utilization
     void control_logic() {
-        if (rst.read()) {
+        if (!rst_n.read()) {
             active_stagger.write(false);
             stagger_counter.write(0);
             for (int i = 0; i < NUM_CORES; ++i) {

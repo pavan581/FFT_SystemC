@@ -14,6 +14,7 @@
 
 #include <systemc.h>
 #include <axi/axi4.h>
+#include <connections/connections.h>
 #include <string>
 
 using namespace sc_core;
@@ -23,13 +24,16 @@ using namespace axi;
 template<int NUM_WPORTS=1, int NUM_RPORTS=1, unsigned DEPTH=1024, typename AxiCfg=void>
 SC_MODULE(Memory) {
     sc_in<bool> clk;
-    sc_in<bool> rst;
+    sc_in<bool> rst_n; // Active-low reset
     
     // AXI read/write slave interfaces using MatchLib
-    sc_vector<typename axi4<AxiCfg>::read::template slave<Connections::SYN_PORT>> read_ports;
-    sc_vector<typename axi4<AxiCfg>::write::template slave<Connections::SYN_PORT>> write_ports;
+    sc_vector<typename axi4<AxiCfg>::read::template slave<>> read_ports;
+    sc_vector<typename axi4<AxiCfg>::write::template slave<>> write_ports;
 
     sc_uint<AxiCfg::dataWidth> mem[DEPTH];
+
+    static const int bytesPerBeat = AxiCfg::dataWidth / 8;
+    static const int addrShift = (AxiCfg::dataWidth == 64) ? 3 : 2;
 
     // Read Port thread process
     void read_port_process(int port_idx) {
@@ -37,7 +41,7 @@ SC_MODULE(Memory) {
         wait();
         
         while (true) {
-            if (rst.read()) {
+            if (!rst_n.read()) {
                 read_ports[port_idx].reset();
                 wait();
                 continue;
@@ -49,13 +53,13 @@ SC_MODULE(Memory) {
                 int len = req.len;
                 for (int beat = 0; beat <= len; ++beat) {
                     typename axi4<AxiCfg>::ReadPayload resp;
-                    resp.data = (addr < DEPTH) ? mem[addr] : (sc_uint<AxiCfg::dataWidth>)0;
+                    resp.data = ((addr >> addrShift) < DEPTH) ? (typename axi4<AxiCfg>::Data)mem[addr >> addrShift] : (typename axi4<AxiCfg>::Data)0;
                     resp.id = req.id;
                     resp.resp = 0; // OKAY response
                     resp.last = (beat == len);
                     
                     read_ports[port_idx].rwrite(resp);
-                    addr = addr + 1;
+                    addr = addr + bytesPerBeat;
                 }
             } else {
                 wait();
@@ -69,7 +73,7 @@ SC_MODULE(Memory) {
         wait();
         
         while (true) {
-            if (rst.read()) {
+            if (!rst_n.read()) {
                 write_ports[port_idx].reset();
                 wait();
                 continue;
@@ -81,10 +85,21 @@ SC_MODULE(Memory) {
                 int len = req.len;
                 for (int beat = 0; beat <= len; ++beat) {
                     typename axi4<AxiCfg>::WritePayload data = write_ports[port_idx].w.Pop();
-                    if (addr < DEPTH) {
-                        mem[addr] = data.data;
+                    if ((addr >> addrShift) < DEPTH) {
+                        if (AxiCfg::useWriteStrobes) {
+                            sc_uint<AxiCfg::dataWidth> original = mem[addr >> addrShift];
+                            sc_uint<AxiCfg::dataWidth> mask = 0;
+                            for (int i = 0; i < bytesPerBeat; ++i) {
+                                if (data.wstrb[i]) {
+                                    mask.range(8 * i + 7, 8 * i) = 0xFF;
+                                }
+                            }
+                            mem[addr >> addrShift] = (original & ~mask) | ((typename axi4<AxiCfg>::Data)data.data & mask);
+                        } else {
+                            mem[addr >> addrShift] = (typename axi4<AxiCfg>::Data)data.data;
+                        }
                     }
-                    addr = addr + 1;
+                    addr = addr + bytesPerBeat;
                 }
                 
                 typename axi4<AxiCfg>::WRespPayload resp;
@@ -111,7 +126,7 @@ SC_MODULE(Memory) {
         for (int i = 0; i < NUM_RPORTS; ++i) {
             sc_spawn_options opt;
             opt.set_sensitivity(&clk.pos());
-            opt.async_reset_signal_is(rst, true);
+            opt.async_reset_signal_is(rst_n, false);
             sc_spawn([this, i]() { this->read_port_process(i); }, 
                      sc_gen_unique_name("read_port_process"), &opt);
         }
@@ -120,7 +135,7 @@ SC_MODULE(Memory) {
         for (int i = 0; i < NUM_WPORTS; ++i) {
             sc_spawn_options opt;
             opt.set_sensitivity(&clk.pos());
-            opt.async_reset_signal_is(rst, true);
+            opt.async_reset_signal_is(rst_n, false);
             sc_spawn([this, i]() { this->write_port_process(i); }, 
                      sc_gen_unique_name("write_port_process"), &opt);
         }

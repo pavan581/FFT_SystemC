@@ -17,7 +17,7 @@ INCDIRS += -I$(AC_TYPES)/include
 INCDIRS += -I$(AC_SIMUTILS)/include
 INCDIRS += -I$(MATCHLIB_EXAMPLES)/include
 
-CXXFLAGS = -std=c++17 $(INCDIRS) -DSC_ALLOW_DEPRECATED_IEEE_API -DSC_INCLUDE_DYNAMIC_PROCESSES
+CXXFLAGS = -std=c++17 $(INCDIRS) -DSC_ALLOW_DEPRECATED_IEEE_API -DSC_INCLUDE_DYNAMIC_PROCESSES -DBOOST_NULLPTR=nullptr -DDEBUG_LEVEL=1
 LDFLAGS = -L$(SYSTEMC_LIB) -lsystemc -lm
 
 # Build directory
@@ -52,7 +52,7 @@ $(TARGET): $(BUILD_DIR) $(OBJS)
 	@echo "Build successful!"
 
 # Compile source files
-$(BUILD_DIR)/%.o: %.cpp
+$(BUILD_DIR)/%.o: %.cpp ac_reset_signal_is.h
 	@echo "Compiling $<..."
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
@@ -69,7 +69,7 @@ run: $(TARGET) $(OUT_DIR)
 # Clean build artifacts
 clean:
 	@echo "Cleaning..."
-	rm -rf $(BUILD_DIR)
+	rm -rf $(BUILD_DIR) ac_reset_signal_is.h
 	@echo "Clean complete!"
 
 # Phony targets
@@ -123,3 +123,6 @@ run_dma_tb: $(DMA_TB_TARGET) $(OUT_DIR)
 	@echo ""
 	@$(DMA_TB_TARGET) | tee $(OUT_DIR)/log/sim_dma_tb.txt
 
+# Rule to generate the dummy catapult header for compatibility
+ac_reset_signal_is.h:
+	@touch ac_reset_signal_is.h

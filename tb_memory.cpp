@@ -1,106 +1,71 @@
 #include "tb_memory.h"
 #include <iostream>
-#include <iomanip>
 
 Testbench::Testbench(sc_module_name name)
     : sc_module(name),
       clk("clk", 10, SC_NS),
-      read_chans("read_chans", 1),
-      write_chans("write_chans", 1),
-      tb_read_master("tb_read_master"),
-      tb_write_master("tb_write_master")
+      read_chan("read_chan"),
+      write_chan("write_chan")
 {
+    // Instantiate sub-modules
+    master = new Master<AxiCfg, MyMasterCfg>("master");
     mem = new Memory<1, 1, 1024, AxiCfg>("mem");
+
+    // Connections Clock
+    Connections::set_sim_clk(&clk);
+
+    // Bind clocks and resets (both use rst_n active-low)
+    master->clk(clk);
+    master->reset_bar(rst_n);
+
     mem->clk(clk);
-    mem->rst(rst);
-    
-    // Bind memory ports to channels
-    mem->read_ports(read_chans);
-    mem->write_ports(write_chans);
+    mem->rst_n(rst_n);
 
-    // Bind testbench master ports to channels
-    tb_read_master(read_chans[0]);
-    tb_write_master(write_chans[0]);
+    // Connect Master to Memory directly
+    master->if_rd(read_chan);
+    mem->read_ports[0](read_chan);
 
-    tf = sc_create_vcd_trace_file("./out/vcd/memory_trace");
+    master->if_wr(write_chan);
+    mem->write_ports[0](write_chan);
+
+    // Done signal of the master
+    master->done(done);
+
+    // VCD Tracing
+    tf = sc_create_vcd_trace_file("./out/vcd/memory_matchlib_trace");
     tf->set_time_unit(1, SC_PS);
     sc_trace(tf, clk, "clk");
-    sc_trace(tf, rst, "rst");
+    sc_trace(tf, rst_n, "rst_n");
+    sc_trace(tf, done, "done");
 
     SC_THREAD(stimuli);
-    sensitive << clk.posedge_event();
 }
 
 Testbench::~Testbench() {
+    delete master;
     delete mem;
     sc_close_vcd_trace_file(tf);
 }
 
-void Testbench::axi_write(unsigned int addr, sc_uint<AxiCfg::dataWidth> data) {
-    typename axi4<AxiCfg>::AddrPayload aw_pay;
-    aw_pay.addr = addr;
-    aw_pay.id = 0;
-    aw_pay.len = 0;
-    aw_pay.size = (AxiCfg::dataWidth == 64) ? 3 : 2;
-    aw_pay.burst = 1;
-    
-    typename axi4<AxiCfg>::WritePayload w_pay;
-    w_pay.data = data;
-    w_pay.wstrb = ~0;
-    w_pay.last = true;
-    
-    tb_write_master.write(aw_pay, w_pay);
-}
-
-sc_uint<AxiCfg::dataWidth> Testbench::axi_read(unsigned int addr) {
-    typename axi4<AxiCfg>::AddrPayload ar_pay;
-    ar_pay.addr = addr;
-    ar_pay.id = 0;
-    ar_pay.len = 0;
-    ar_pay.size = (AxiCfg::dataWidth == 64) ? 3 : 2;
-    ar_pay.burst = 1;
-
-    tb_read_master.ar.Push(ar_pay);
-    typename axi4<AxiCfg>::ReadPayload r_pay = tb_read_master.r.Pop();
-    return r_pay.data;
-}
-
 void Testbench::stimuli() {
-    // Reset AXI masters
-    tb_write_master.reset();
-    tb_read_master.reset();
-
     // Assert reset
-    rst.write(true);
+    std::cout << "[MEM TB] Asserting Reset..." << std::endl;
+    rst_n.write(false);
     wait(20, SC_NS);
-    rst.write(false);
-    wait(20, SC_NS);
-
-    std::cout << "[MEM TB] Starting AXI Write operations..." << std::endl;
-    for (int i = 0; i < 16; i++) {
-        axi_write(i, i + 0xA0);
-    }
-
-    std::cout << "[MEM TB] Starting AXI Read operations and verifying data..." << std::endl;
-    bool all_passed = true;
-    for (int i = 0; i < 16; i++) {
-        sc_uint<AxiCfg::dataWidth> val = axi_read(i);
-        std::cout << "  Addr[" << i << "] = " << std::hex << val << std::dec;
-        if (val == (i + 0xA0)) {
-            std::cout << " [OK]" << std::endl;
-        } else {
-            std::cout << " [ERROR: expected " << std::hex << (i + 0xA0) << "]" << std::dec << std::endl;
-            all_passed = false;
+    
+    rst_n.write(true);
+    std::cout << "[MEM TB] Reset released. Starting Matchlib AXI Master verification..." << std::endl;
+    
+    // Wait for done signal
+    while (true) {
+        wait(10, SC_NS);
+        if (done.read()) {
+            std::cout << "[MEM TB] Matchlib AXI Master completed all checks successfully!" << std::endl;
+            std::cout << "[MEM TB] ALL TESTS PASSED." << std::endl;
+            sc_stop();
+            return;
         }
     }
-
-    if (all_passed) {
-        std::cout << "[MEM TB] ALL TESTS PASSED." << std::endl;
-    } else {
-        std::cout << "[MEM TB] TESTS FAILED." << std::endl;
-    }
-
-    sc_stop();
 }
 
 int sc_main(int argc, char* argv[]) {

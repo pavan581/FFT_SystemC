@@ -28,11 +28,11 @@ using namespace Connections;
 template<int NUM_CORES, int N, typename AxiCfg>
 SC_MODULE(Monitor) {
     sc_in<bool> clk;
-    sc_in<bool> rst;
+    sc_in<bool> rst_n; // Active-low reset
     
-    // Monitored global channels
-    const sc_vector<typename axi4<AxiCfg>::read::template chan<Connections::SYN_PORT>>& mem_read_chans;
-    const sc_vector<typename axi4<AxiCfg>::write::template chan<Connections::SYN_PORT>>& mem_write_chans;
+    // Monitored global channels (default port types)
+    const sc_vector<typename axi4<AxiCfg>::read::template chan<>>& mem_read_chans;
+    const sc_vector<typename axi4<AxiCfg>::write::template chan<>>& mem_write_chans;
     const sc_vector<sc_signal<sc_uint<AxiCfg::addrWidth>>>& base_addrs;
 
     sc_uint<AxiCfg::addrWidth> last_addr[NUM_CORES];
@@ -40,15 +40,17 @@ SC_MODULE(Monitor) {
     unsigned int current_write_addr[NUM_CORES];
     unsigned int write_beat_count[NUM_CORES];
 
+    static const int bytesPerBeat = AxiCfg::dataWidth / 8;
+
     SC_HAS_PROCESS(Monitor);
 
     Monitor(sc_module_name name,
-            const sc_vector<typename axi4<AxiCfg>::read::template chan<Connections::SYN_PORT>>& r_chans,
-            const sc_vector<typename axi4<AxiCfg>::write::template chan<Connections::SYN_PORT>>& w_chans,
+            const sc_vector<typename axi4<AxiCfg>::read::template chan<>>& r_chans,
+            const sc_vector<typename axi4<AxiCfg>::write::template chan<>>& w_chans,
             const sc_vector<sc_signal<sc_uint<AxiCfg::addrWidth>>>& b_addrs)
         : sc_module(name),
           clk("clk"),
-          rst("rst"),
+          rst_n("rst_n"),
           mem_read_chans(r_chans),
           mem_write_chans(w_chans),
           base_addrs(b_addrs)
@@ -95,15 +97,15 @@ SC_MODULE(Monitor) {
                         addr = aw_addr_queue[i].front();
                         aw_addr_queue[i].pop();
                     } else {
-                        addr = base_addrs[i].read() + N;
+                        addr = base_addrs[i].read() + N * bytesPerBeat;
                     }
                     current_write_addr[i] = addr;
                 } else {
-                    current_write_addr[i] += 1;
+                    current_write_addr[i] += bytesPerBeat;
                     addr = current_write_addr[i];
                 }
                 
-                int index = addr - (base_addrs[i].read() + N);
+                int index = (addr - (base_addrs[i].read() + N * bytesPerBeat)) / bytesPerBeat;
                 complex_t out_val = unpack_complex<AxiCfg>(w_pay.data);
                 
                 std::cout << "@" << std::setw(5) << sc_time_stamp() 

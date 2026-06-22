@@ -26,11 +26,11 @@ struct StageInstantiator {
                             std::vector<Combinational<complex_t>*>& stage_signals,
                             int index,
                             sc_in<bool>& clk,
-                            sc_in<bool>& rst) {
+                            sc_in<bool>& rst_n) {
         std::string s_name = "stage_" + std::to_string(index);
         auto* stage = new Stage<STAGE_SIZE>(s_name.c_str(), NUM_MULT, NUM_ADD);
         stage->clk(clk);
-        stage->rst(rst);
+        stage->rst_n(rst_n);
         stages.push_back(stage);
         
         if (STAGE_SIZE > 2) {
@@ -42,7 +42,7 @@ struct StageInstantiator {
             
             // Recurse to instantiate the next stage
             StageInstantiator<STAGE_SIZE / 2, NUM_MULT, NUM_ADD>::instantiate(
-                stages, stage_signals, index + 1, clk, rst
+                stages, stage_signals, index + 1, clk, rst_n
             );
         }
     }
@@ -55,11 +55,11 @@ struct StageInstantiator<2, NUM_MULT, NUM_ADD> {
                             std::vector<Combinational<complex_t>*>& stage_signals,
                             int index,
                             sc_in<bool>& clk,
-                            sc_in<bool>& rst) {
+                            sc_in<bool>& rst_n) {
         std::string s_name = "stage_" + std::to_string(index);
         auto* stage = new Stage<2>(s_name.c_str(), NUM_MULT, NUM_ADD);
         stage->clk(clk);
-        stage->rst(rst);
+        stage->rst_n(rst_n);
         stages.push_back(stage);
     }
 };
@@ -68,7 +68,7 @@ struct StageInstantiator<2, NUM_MULT, NUM_ADD> {
 template<int N, int NUM_MULT=4, int NUM_ADD=6>
 SC_MODULE(FFT) {
     sc_in<bool> clk;
-    sc_in<bool> rst;
+    sc_in<bool> rst_n;
     
     In<complex_t> in_data;
     Out<complex_t> out_data;
@@ -78,7 +78,7 @@ SC_MODULE(FFT) {
     
     SC_CTOR(FFT) {
         // Instantiate the cascade of stages recursively
-        StageInstantiator<N, NUM_MULT, NUM_ADD>::instantiate(stages, stage_signals, 0, clk, rst);
+        StageInstantiator<N, NUM_MULT, NUM_ADD>::instantiate(stages, stage_signals, 0, clk, rst_n);
         
         // Connect stages in series
         for (size_t i = 0; i < stages.size(); ++i) {

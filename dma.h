@@ -18,6 +18,9 @@
 #include "fft_types.h"
 #include "stage.h"
 #include <cmath>
+#include <iostream>
+#include <iomanip>
+#include <string>
 
 using namespace sc_core;
 using namespace axi;
@@ -27,7 +30,7 @@ using namespace Connections;
 template<typename AxiCfg, int N_SIZE = 4, int NUM_MULT = 4, int NUM_ADD = 6>
 SC_MODULE(DMA) {
     sc_in<bool> clk;
-    sc_in<bool> rst;
+    sc_in<bool> rst_n; // Active-low reset
 
     // Control interface
     sc_in<bool> start;
@@ -35,9 +38,9 @@ SC_MODULE(DMA) {
     sc_in<int> num_samples;
     sc_out<bool> busy;
 
-    // AXI Master interfaces
-    typename axi4<AxiCfg>::read::template master<Connections::SYN_PORT> mem_read_port;
-    typename axi4<AxiCfg>::write::template master<Connections::SYN_PORT> mem_write_port;
+    // AXI Master interfaces (default port types)
+    typename axi4<AxiCfg>::read::template master<> mem_read_port;
+    typename axi4<AxiCfg>::write::template master<> mem_write_port;
 
     // Connections interfaces to the FFT core
     Out<complex_t> fft_out;
@@ -48,8 +51,10 @@ SC_MODULE(DMA) {
     typedef typename axi4<AxiCfg>::WritePayload WritePayload;
     typedef typename axi4<AxiCfg>::WRespPayload WRespPayload;
 
+    static const int bytesPerBeat = AxiCfg::dataWidth / 8;
+
     // Helper to build AXI address requests
-    AddrPayload create_addr_req(sc_uint<AxiCfg::addrWidth> addr, int len) {
+    AddrPayload create_addr_req(typename axi4<AxiCfg>::Addr addr, int len) {
         AddrPayload req;
         req.addr = addr;
         req.id = 0;
@@ -60,7 +65,7 @@ SC_MODULE(DMA) {
     }
 
     // Helper to build AXI write data payloads
-    WritePayload create_write_payload(sc_uint<AxiCfg::dataWidth> data, bool last) {
+    WritePayload create_write_payload(typename axi4<AxiCfg>::Data data, bool last) {
         WritePayload w_pay;
         w_pay.data = data;
         w_pay.wstrb = ~0;
@@ -163,7 +168,7 @@ SC_MODULE(DMA) {
                 int latency = calc_pipeline_latency();
                 int total_inputs = ((total + latency + N_SIZE - 1) / N_SIZE) * N_SIZE;
                 int flush_outputs_to_discard = total_inputs - total;
-                sc_uint<AxiCfg::addrWidth> addr = base_addr.read() + N_SIZE;
+                typename axi4<AxiCfg>::Addr addr = base_addr.read() + N_SIZE * bytesPerBeat;
                 
                 // Address handshake for the write burst
                 AddrPayload aw_pay = create_addr_req(addr, total - 1);
@@ -172,7 +177,7 @@ SC_MODULE(DMA) {
                 // Write active samples back to memory
                 for (int i = 0; i < total; ++i) {
                     complex_t out_val = fft_in.Pop();
-                    sc_uint<AxiCfg::dataWidth> packed = pack_complex<AxiCfg>(out_val);
+                    typename axi4<AxiCfg>::Data packed = pack_complex<AxiCfg>(out_val);
                     WritePayload w_pay = create_write_payload(packed, i == total - 1);
                     mem_write_port.w.Push(w_pay);
                 }
@@ -204,15 +209,15 @@ SC_MODULE(DMA) {
     {
         SC_THREAD(read_addr_thread);
         sensitive << clk.pos();
-        async_reset_signal_is(rst, true);
+        async_reset_signal_is(rst_n, false);
 
         SC_THREAD(read_data_thread);
         sensitive << clk.pos();
-        async_reset_signal_is(rst, true);
+        async_reset_signal_is(rst_n, false);
 
         SC_THREAD(write_thread);
         sensitive << clk.pos();
-        async_reset_signal_is(rst, true);
+        async_reset_signal_is(rst_n, false);
     }
 };
 
