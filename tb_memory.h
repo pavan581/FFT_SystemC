@@ -37,7 +37,7 @@ SC_MODULE(Testbench) {
     typename axi4<AxiCfg>::write::template chan<> write_chan;
 
     Master<AxiCfg, MyMasterCfg>* master;
-    Memory<1, 1, 1024, AxiCfg>* mem;
+    Memory<1024, AxiCfg>* mem;
 
     sc_trace_file* tf;
 

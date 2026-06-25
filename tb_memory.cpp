@@ -9,7 +9,7 @@ Testbench::Testbench(sc_module_name name)
 {
     // Instantiate sub-modules
     master = new Master<AxiCfg, MyMasterCfg>("master");
-    mem = new Memory<1, 1, 1024, AxiCfg>("mem");
+    mem = new Memory<1024, AxiCfg>("mem");
 
     // Connections Clock
     Connections::set_sim_clk(&clk);
@@ -23,10 +23,10 @@ Testbench::Testbench(sc_module_name name)
 
     // Connect Master to Memory directly
     master->if_rd(read_chan);
-    mem->read_ports[0](read_chan);
+    mem->read_port(read_chan);
 
     master->if_wr(write_chan);
-    mem->write_ports[0](write_chan);
+    mem->write_port(write_chan);
 
     // Done signal of the master
     master->done(done);

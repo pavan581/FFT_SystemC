@@ -32,15 +32,12 @@ SC_MODULE(Testbench) {
     static const int ADDR_WIDTH  = AxiCfg::addrWidth;
     static const int DATA_WIDTH  = AxiCfg::dataWidth;
     
-    // Shared Multi-Port Memory
-    Memory<NUM_CORES + 1, NUM_CORES, MEM_DEPTH, AxiCfg>* mem;
+    // Dedicated Single-Port Memories
+    sc_vector<Memory<MEM_DEPTH, AxiCfg>> mems;
     
     // Read and Write channels connecting Memory and Cores (default port types)
     sc_vector<typename axi4<AxiCfg>::read::template chan<>> mem_read_chans;
     sc_vector<typename axi4<AxiCfg>::write::template chan<>> mem_write_chans;
-
-    // AXI Write Master for initializing shared memory (default port types)
-    typename axi4<AxiCfg>::write::template master<> tb_write_master;
 
     // DUT
     Top<N, NUM_CORES, HOP, AxiCfg, NUM_MULT, NUM_ADD>* fft_sys;
@@ -58,20 +55,21 @@ SC_MODULE(Testbench) {
 
     SC_CTOR(Testbench) :
         clk("clk", 1, SC_NS),
+        mems("mems", NUM_CORES),
         mem_read_chans("mem_read_chans", NUM_CORES),
-        mem_write_chans("mem_write_chans", NUM_CORES + 1),
-        tb_write_master("tb_write_master"),
+        mem_write_chans("mem_write_chans", NUM_CORES),
         base_addrs("base_addr", NUM_CORES),
         num_samples("num_samples", NUM_CORES)
     {
 
 
         // 1. Memory instantiation
-        mem = new Memory<NUM_CORES + 1, NUM_CORES, MEM_DEPTH, AxiCfg>("shared_mem");
-        mem->clk(clk);
-        mem->rst_n(rst_n);
-        mem->read_ports(mem_read_chans);
-        mem->write_ports(mem_write_chans);
+        for (int i = 0; i < NUM_CORES; ++i) {
+            mems[i].clk(clk);
+            mems[i].rst_n(rst_n);
+            mems[i].read_port(mem_read_chans[i]);
+            mems[i].write_port(mem_write_chans[i]);
+        }
 
         // 2. FFT Core complex instantiation
         fft_sys = new Top<N, NUM_CORES, HOP, AxiCfg, NUM_MULT, NUM_ADD>("fft_sys");
@@ -84,9 +82,6 @@ SC_MODULE(Testbench) {
         }
         fft_sys->base_addrs(base_addrs);
         fft_sys->num_samples(num_samples);
-
-        // Connect the TB write port to initialization slot in Memory
-        tb_write_master(mem_write_chans[NUM_CORES]);
 
 
 
@@ -119,8 +114,6 @@ SC_MODULE(Testbench) {
     ~Testbench() {
         sc_close_vcd_trace_file(tf);
         delete fft_sys;
-        delete mem;
-
     }
 
     int cycle_cnt = 0;
@@ -130,21 +123,25 @@ SC_MODULE(Testbench) {
 
 
 
-    // Helper to perform memory writes from the testbench
+    // Direct memory writes from the testbench
     void axi_write(unsigned int addr, sc_uint<AxiCfg::dataWidth> data) {
-        typename axi4<AxiCfg>::AddrPayload aw_pay;
-        aw_pay.addr = addr;
-        aw_pay.id = 0;
-        aw_pay.len = 0;
-        aw_pay.size = (AxiCfg::dataWidth == 64) ? 3 : 2;
-        aw_pay.burst = 1;
-        
-        typename axi4<AxiCfg>::WritePayload w_pay;
-        w_pay.data = data;
-        w_pay.wstrb = ~0;
-        w_pay.last = true;
-        
-        tb_write_master.write(aw_pay, w_pay);
+        int target_core = -1;
+        for (int c = 0; c < NUM_CORES; ++c) {
+            unsigned int start = base_addrs[c].read().to_uint();
+            unsigned int end = start + 2 * N * bytesPerBeat;
+            if (addr >= start && addr < end) {
+                target_core = c;
+                break;
+            }
+        }
+        if (target_core == -1) {
+            // Fallback for initial writes before start_signal or when base_addrs might not cover the address
+            target_core = addr / (2 * N * bytesPerBeat);
+            if (target_core < 0 || target_core >= NUM_CORES) {
+                target_core = 0;
+            }
+        }
+        mems[target_core].mem[addr >> 3] = data;
     }
 
     // Verification reference DFT model
@@ -181,7 +178,7 @@ SC_MODULE(Testbench) {
         std::vector<complex_t> inputs(aligned_len);
         for (int i = 0; i < aligned_len; ++i) {
             if (i < len) {
-                sc_uint<AxiCfg::dataWidth> raw = mem->mem[(start_addr >> 3) + i];
+                sc_uint<AxiCfg::dataWidth> raw = mems[core_idx].mem[(start_addr >> 3) + i];
                 inputs[i] = unpack_complex<AxiCfg>(raw);
             } else {
                 inputs[i] = complex_t(0.0, 0.0);
@@ -206,7 +203,7 @@ SC_MODULE(Testbench) {
         bool pass = true;
         std::cout << "Core " << core_idx << " Verification (Base Addr: " << start_addr + N * bytesPerBeat << "):" << std::endl;
         for (int i = 0; i < len; ++i) {
-            sc_uint<AxiCfg::dataWidth> raw = mem->mem[((start_addr + N * bytesPerBeat) >> 3) + i];
+            sc_uint<AxiCfg::dataWidth> raw = mems[core_idx].mem[((start_addr + N * bytesPerBeat) >> 3) + i];
             complex_t actual = unpack_complex<AxiCfg>(raw);
             complex_t exp = expected[i];
             
@@ -227,7 +224,6 @@ SC_MODULE(Testbench) {
     }
 
     void source_thread() {
-        tb_write_master.reset();
         start_signal.write(false);
         for(int i=0; i<NUM_CORES; i++) {
             base_addrs[i].write(1023 * bytesPerBeat); 
