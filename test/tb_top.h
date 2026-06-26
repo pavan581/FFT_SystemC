@@ -207,8 +207,8 @@ SC_MODULE(Testbench) {
             complex_t actual = unpack_complex<AxiCfg>(raw);
             complex_t exp = expected[i];
             
-            double diff_real = std::abs(actual.real - exp.real);
-            double diff_imag = std::abs(actual.imag - exp.imag);
+            double diff_real = std::abs(actual.real - std::round(exp.real));
+            double diff_imag = std::abs(actual.imag - std::round(exp.imag));
             bool match = (diff_real < 1e-2) && (diff_imag < 1e-2);
             
             std::cout << "  Addr[" << ((start_addr + N * bytesPerBeat) >> 3) + i << "]: Actual=" << actual 

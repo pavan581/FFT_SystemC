@@ -4,10 +4,13 @@ CXX = g++ -g
 
 SYSTEMC_LIB = $(SYSTEMC_HOME)/lib-linux64
 
-PWD := $(shell pwd)
-SOURCE_DIR = $(if $(subst ./,,$(SOURCE_DIR1)),$(SOURCE_DIR1),$(PWD)/)
+SOURCE_DIR ?= src
+TESTBENCH_DIR ?= test
 
-INCDIRS := -I$(SOURCE_DIR)
+# VPATH for finding source files
+VPATH = $(SOURCE_DIR) $(TESTBENCH_DIR)
+
+INCDIRS := -I. -I$(SOURCE_DIR) -I$(TESTBENCH_DIR)
 INCDIRS += -I$(SYSTEMC_HOME)/include -I$(SYSTEMC_HOME)/src
 INCDIRS += -I$(CONNECTIONS_HOME)/include
 INCDIRS += -I$(MATCHLIB_HOME)/cmod/include
@@ -17,7 +20,7 @@ INCDIRS += -I$(AC_TYPES)/include
 INCDIRS += -I$(AC_SIMUTILS)/include
 INCDIRS += -I$(MATCHLIB_EXAMPLES)/include
 
-CXXFLAGS = -std=c++17 $(INCDIRS) -DSC_ALLOW_DEPRECATED_IEEE_API -DSC_INCLUDE_DYNAMIC_PROCESSES -DBOOST_NULLPTR=nullptr -DDEBUG_LEVEL=1
+CXXFLAGS = -std=c++17 $(INCDIRS) -DSC_ALLOW_DEPRECATED_IEEE_API -DSC_INCLUDE_DYNAMIC_PROCESSES -DBOOST_NULLPTR=nullptr
 LDFLAGS = -L$(SYSTEMC_LIB) -lsystemc -lm
 
 # Build directory
@@ -73,7 +76,7 @@ clean:
 	@echo "Clean complete!"
 
 # Phony targets
-.PHONY: all clean run run_fft_tb run_mem_tb run_dma_tb
+.PHONY: all clean run run_fft_tb run_mem_tb run_dma_tb run_system_tb
 
 # FFT Testbench
 FFT_TB_SRCS = tb_fft.cpp
@@ -122,6 +125,22 @@ run_dma_tb: $(DMA_TB_TARGET) $(OUT_DIR)
 	@echo "Output will be saved to: $(OUT_DIR)/log/sim_dma_tb.txt"
 	@echo ""
 	@$(DMA_TB_TARGET) | tee $(OUT_DIR)/log/sim_dma_tb.txt
+
+# System Testbench
+SYSTEM_TB_SRCS = tb_system.cpp
+SYSTEM_TB_OBJS = $(addprefix $(BUILD_DIR)/, $(SYSTEM_TB_SRCS:.cpp=.o))
+SYSTEM_TB_TARGET = $(BUILD_DIR)/tb_system
+
+$(SYSTEM_TB_TARGET): $(BUILD_DIR) $(SYSTEM_TB_OBJS)
+	@echo "Linking $(SYSTEM_TB_TARGET)..."
+	$(CXX) $(SYSTEM_TB_OBJS) $(LDFLAGS) -o $(SYSTEM_TB_TARGET)
+	@echo "Build successful!"
+
+run_system_tb: $(SYSTEM_TB_TARGET) $(OUT_DIR)
+	@echo "Running System testbench..."
+	@echo "Output will be saved to: $(OUT_DIR)/log/sim_system_tb.txt"
+	@echo ""
+	@$(SYSTEM_TB_TARGET) | tee $(OUT_DIR)/log/sim_system_tb.txt
 
 # Rule to generate the dummy catapult header for compatibility
 ac_reset_signal_is.h:

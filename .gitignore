@@ -4,9 +4,6 @@ build
 # Archive directory
 archive
 
-# Testing Folder
-test
-
 # Workspace Folder
 .vscode
 
@@ -15,3 +12,6 @@ library
 
 # Development
 .devcontainer
+
+# Temporary files
+ac_reset_signal_is.h

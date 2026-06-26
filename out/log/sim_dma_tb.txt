@@ -4,25 +4,14 @@ Connections Clock: tb_dma.clk Period: 10 ns
 [DMA TB] Asserting Reset...
 [DMA TB] Initializing Slave memory...
 [DMA TB] Launching DMA Transfer (Base: 0, Len: 4)...
-60 ns tb_dma.Slave Received write request: [id{0} addr{32} burst{} len{3} size{} cache{} auser{} ]
-60 ns tb_dma.Slave Received read request: [id{0} addr{0} burst{} len{3} size{} cache{} auser{} ]
-60 ns tb_dma.Slave Returned read data: data=[id{0} data{0} resp{0} last{0} ruser{} ] addr=0 beat=0
-70 ns tb_dma.Slave Returned read data: data=[id{0} data{4294967296} resp{0} last{0} ruser{} ] addr=8 beat=1
-80 ns tb_dma.Slave Returned read data: data=[id{0} data{8589934592} resp{0} last{0} ruser{} ] addr=10 beat=2
 [DMA TB] Received from DMA: real{0} imag{0}  @ 80 ns
-90 ns tb_dma.Slave Returned read data: data=[id{0} data{12884901888} resp{0} last{1} ruser{} ] addr=18 beat=3
 [DMA TB] Received from DMA: real{1} imag{0}  @ 90 ns
-100 ns tb_dma.Slave Received write data: data=[data{429496729600} last{0} wstrb{255} wuser{} ] beat=0
 [DMA TB] Received from DMA: real{2} imag{0}  @ 100 ns
-110 ns tb_dma.Slave Received write data: data=[data{433791696896} last{0} wstrb{255} wuser{} ] beat=1
 [DMA TB] Received from DMA: real{3} imag{0}  @ 110 ns
-120 ns tb_dma.Slave Received write data: data=[data{438086664192} last{0} wstrb{255} wuser{} ] beat=2
 [DMA TB] Received from DMA: real{0} imag{0}  @ 120 ns
-130 ns tb_dma.Slave Received write data: data=[data{442381631488} last{1} wstrb{255} wuser{} ] beat=3
 [DMA TB] Received from DMA: real{0} imag{0}  @ 130 ns
-140 ns tb_dma.Slave Sent write response: [id{0} resp{0} buser{} ]
 [DMA TB] Received from DMA: real{0} imag{0}  @ 140 ns
-[DMA TB] Received from DMA: real{0} imag{0}  @ 150 ns
+[DMA TB] Received from DMA: real{0} imag{0}  @ 160 ns
 [DMA TB] Verifying memory write-back (offset by N=4)...
   Addr[4] = real{100} imag{0}  [OK]
   Addr[5] = real{101} imag{0}  [OK]

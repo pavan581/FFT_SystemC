@@ -1,0 +1,149 @@
+Starting Interleaved FFT Simulation
+
+Info: (I703) tracing timescale unit set: 1 ps (./out/vcd/InterleavedFFT-DMA_N8_C2_H1_M2_A2_axi.vcd)
+Connections Clock: tb.clk Period: 1 ns
+
+[TEST 1] Standard Operation (N=8, Cores=2)...
+@6 ns Initializing Memory...
+@11 ns Triggering Start...
+
+Memory Verification...
+Core 0 Verification (Base Addr: 64):
+  Addr[8]: Actual=real{28} imag{0}  Expected=real{28} imag{0}  [OK]
+  Addr[9]: Actual=real{-4} imag{0}  Expected=real{-4} imag{-3.42901e-15}  [OK]
+  Addr[10]: Actual=real{-4} imag{4}  Expected=real{-4} imag{4}  [OK]
+  Addr[11]: Actual=real{-4} imag{-4}  Expected=real{-4} imag{-4}  [OK]
+  Addr[12]: Actual=real{-4} imag{10}  Expected=real{-4} imag{9.65685}  [OK]
+  Addr[13]: Actual=real{-4} imag{-2}  Expected=real{-4} imag{-1.65685}  [OK]
+  Addr[14]: Actual=real{-4} imag{2}  Expected=real{-4} imag{1.65685}  [OK]
+  Addr[15]: Actual=real{-4} imag{-10}  Expected=real{-4} imag{-9.65685}  [OK]
+Core 1 Verification (Base Addr: 192):
+  Addr[24]: Actual=real{156} imag{0}  Expected=real{156} imag{0}  [OK]
+  Addr[25]: Actual=real{-4} imag{0}  Expected=real{-4} imag{-1.12668e-14}  [OK]
+  Addr[26]: Actual=real{-4} imag{4}  Expected=real{-4} imag{4}  [OK]
+  Addr[27]: Actual=real{-4} imag{-4}  Expected=real{-4} imag{-4}  [OK]
+  Addr[28]: Actual=real{-4} imag{10}  Expected=real{-4} imag{9.65685}  [OK]
+  Addr[29]: Actual=real{-4} imag{-2}  Expected=real{-4} imag{-1.65685}  [OK]
+  Addr[30]: Actual=real{-4} imag{2}  Expected=real{-4} imag{1.65685}  [OK]
+  Addr[31]: Actual=real{-4} imag{-10}  Expected=real{-4} imag{-9.65685}  [OK]
+[TEST 1] PASSED.
+[TEST 1] Finished.
+
+[TEST 2] Consecutive Starts...
+@2012 ns Triggering Start (Run 2)...
+
+Memory Verification...
+Core 0 Verification (Base Addr: 64):
+  Addr[8]: Actual=real{28} imag{0}  Expected=real{28} imag{0}  [OK]
+  Addr[9]: Actual=real{-4} imag{0}  Expected=real{-4} imag{-3.42901e-15}  [OK]
+  Addr[10]: Actual=real{-4} imag{4}  Expected=real{-4} imag{4}  [OK]
+  Addr[11]: Actual=real{-4} imag{-4}  Expected=real{-4} imag{-4}  [OK]
+  Addr[12]: Actual=real{-4} imag{10}  Expected=real{-4} imag{9.65685}  [OK]
+  Addr[13]: Actual=real{-4} imag{-2}  Expected=real{-4} imag{-1.65685}  [OK]
+  Addr[14]: Actual=real{-4} imag{2}  Expected=real{-4} imag{1.65685}  [OK]
+  Addr[15]: Actual=real{-4} imag{-10}  Expected=real{-4} imag{-9.65685}  [OK]
+Core 1 Verification (Base Addr: 192):
+  Addr[24]: Actual=real{156} imag{0}  Expected=real{156} imag{0}  [OK]
+  Addr[25]: Actual=real{-4} imag{0}  Expected=real{-4} imag{-1.12668e-14}  [OK]
+  Addr[26]: Actual=real{-4} imag{4}  Expected=real{-4} imag{4}  [OK]
+  Addr[27]: Actual=real{-4} imag{-4}  Expected=real{-4} imag{-4}  [OK]
+  Addr[28]: Actual=real{-4} imag{10}  Expected=real{-4} imag{9.65685}  [OK]
+  Addr[29]: Actual=real{-4} imag{-2}  Expected=real{-4} imag{-1.65685}  [OK]
+  Addr[30]: Actual=real{-4} imag{2}  Expected=real{-4} imag{1.65685}  [OK]
+  Addr[31]: Actual=real{-4} imag{-10}  Expected=real{-4} imag{-9.65685}  [OK]
+[TEST 2] PASSED.
+[TEST 2] Finished.
+
+[TEST 3] Mid-flight Reset...
+@4023 ns Asserting Reset!
+@4025 ns Re-initializing Memory after Reset...
+[TEST 3] Finished.
+
+[TEST 4] Mid-flight Restart...
+@6036 ns Pulsing Start AGAIN...
+[TEST 4] Finished.
+
+[TEST 5] Dynamic Reconfiguration...
+@8043 ns Re-initializing Memory for Test 5...
+@8048 ns Triggering Start (New Config)...
+
+Memory Verification...
+Core 0 Verification (Base Addr: 192):
+  Addr[24]: Actual=real{0} imag{0}  Expected=real{0} imag{0}  [OK]
+  Addr[25]: Actual=real{0} imag{0}  Expected=real{0} imag{0}  [OK]
+  Addr[26]: Actual=real{0} imag{0}  Expected=real{0} imag{0}  [OK]
+  Addr[27]: Actual=real{0} imag{0}  Expected=real{0} imag{0}  [OK]
+  Addr[28]: Actual=real{0} imag{0}  Expected=real{0} imag{0}  [OK]
+  Addr[29]: Actual=real{0} imag{0}  Expected=real{0} imag{0}  [OK]
+  Addr[30]: Actual=real{0} imag{0}  Expected=real{0} imag{0}  [OK]
+  Addr[31]: Actual=real{0} imag{0}  Expected=real{0} imag{0}  [OK]
+Core 1 Verification (Base Addr: 320):
+  Addr[40]: Actual=real{0} imag{0}  Expected=real{0} imag{0}  [OK]
+  Addr[41]: Actual=real{0} imag{0}  Expected=real{0} imag{0}  [OK]
+  Addr[42]: Actual=real{0} imag{0}  Expected=real{0} imag{0}  [OK]
+  Addr[43]: Actual=real{0} imag{0}  Expected=real{0} imag{0}  [OK]
+  Addr[44]: Actual=real{0} imag{0}  Expected=real{0} imag{0}  [OK]
+  Addr[45]: Actual=real{0} imag{0}  Expected=real{0} imag{0}  [OK]
+  Addr[46]: Actual=real{0} imag{0}  Expected=real{0} imag{0}  [OK]
+  Addr[47]: Actual=real{0} imag{0}  Expected=real{0} imag{0}  [OK]
+[TEST 5] PASSED.
+[TEST 5] Finished.
+
+[TEST 6] Partial Input...
+@10055 ns Re-initializing Memory for Test 6...
+@10060 ns Triggering Start (Partial Inputs)...
+
+Memory Verification...
+Core 0 Verification (Base Addr: 64):
+  Addr[8]: Actual=real{28} imag{0}  Expected=real{28} imag{0}  [OK]
+  Addr[9]: Actual=real{-4} imag{0}  Expected=real{-4} imag{-3.42901e-15}  [OK]
+  Addr[10]: Actual=real{-4} imag{4}  Expected=real{-4} imag{4}  [OK]
+  Addr[11]: Actual=real{-4} imag{-4}  Expected=real{-4} imag{-4}  [OK]
+  Addr[12]: Actual=real{-4} imag{10}  Expected=real{-4} imag{9.65685}  [OK]
+  Addr[13]: Actual=real{-4} imag{-2}  Expected=real{-4} imag{-1.65685}  [OK]
+  Addr[14]: Actual=real{-4} imag{2}  Expected=real{-4} imag{1.65685}  [OK]
+  Addr[15]: Actual=real{-4} imag{-10}  Expected=real{-4} imag{-9.65685}  [OK]
+Core 1 Verification (Base Addr: 192):
+  Addr[24]: Actual=real{70} imag{36}  Expected=real{70} imag{36}  [OK]
+  Addr[25]: Actual=real{-2} imag{-2}  Expected=real{-2} imag{-2}  [OK]
+  Addr[26]: Actual=real{-3} imag{1}  Expected=real{-3} imag{1}  [OK]
+  Addr[27]: Actual=real{-1} imag{-3}  Expected=real{-1} imag{-3}  [OK]
+[TEST 6] PASSED.
+[TEST 6] Finished.
+
+[TEST 7] Continuous Stream (10 inputs for N=4)...
+@12067 ns Initializing Memory for Stream...
+@12068 ns Triggering Start (Continuous Stream)...
+
+Memory Verification (Core 0 Block 1, Untouched by Overlap)...
+Core 0 Verification (Base Addr: 64):
+  Addr[8]: Actual=real{28} imag{16}  Expected=real{28} imag{16}  [OK]
+  Addr[9]: Actual=real{-4} imag{-4}  Expected=real{-4} imag{-4}  [OK]
+  Addr[10]: Actual=real{-6} imag{2}  Expected=real{-6} imag{2}  [OK]
+  Addr[11]: Actual=real{-2} imag{-6}  Expected=real{-2} imag{-6}  [OK]
+  Addr[12]: Actual=real{-9} imag{8}  Expected=real{-8.82843} imag{7.65685}  [OK]
+  Addr[13]: Actual=real{-3} imag{-4}  Expected=real{-3.17157} imag{-3.65685}  [OK]
+  Addr[14]: Actual=real{-5} imag{0}  Expected=real{-4.82843} imag{-0.343146}  [OK]
+  Addr[15]: Actual=real{1} imag{-12}  Expected=real{0.828427} imag{-11.6569}  [OK]
+Core 1 Verification (Base Addr: 256):
+  Addr[32]: Actual=real{220} imag{112}  Expected=real{220} imag{112}  [OK]
+  Addr[33]: Actual=real{-4} imag{-4}  Expected=real{-4} imag{-4}  [OK]
+  Addr[34]: Actual=real{-6} imag{2}  Expected=real{-6} imag{2}  [OK]
+  Addr[35]: Actual=real{-2} imag{-6}  Expected=real{-2} imag{-6}  [OK]
+  Addr[36]: Actual=real{-9} imag{8}  Expected=real{-8.82843} imag{7.65685}  [OK]
+  Addr[37]: Actual=real{-3} imag{-4}  Expected=real{-3.17157} imag{-3.65685}  [OK]
+  Addr[38]: Actual=real{-5} imag{0}  Expected=real{-4.82843} imag{-0.343146}  [OK]
+  Addr[39]: Actual=real{1} imag{-12}  Expected=real{0.828427} imag{-11.6569}  [OK]
+[TEST 7] PASSED.
+[TEST 7] Finished.
+
+[TEST 8] Zero-length Input (Edge Case)...
+[TEST 8] Finished.
+
+[TEST 9] Memory Verification...
+[TEST 9] Finished.
+
+[ALL TESTS FINISHED] @ 12370 ns
+
+Info: /OSCI/SystemC: Simulation stopped by user.
+Simulation Finished.

@@ -98,9 +98,13 @@ SC_MODULE(DMA) {
             }
             
             int total = num_samples.read();
-            if (total > 0) {
-                AddrPayload req = create_addr_req(base_addr.read(), total - 1);
+            typename axi4<AxiCfg>::Addr addr = base_addr.read();
+            while (total > 0) {
+                int len = (total > 256) ? 256 : total;
+                AddrPayload req = create_addr_req(addr, len - 1);
                 mem_read_port.ar.Push(req);
+                addr += len * bytesPerBeat;
+                total -= len;
             }
             
             while (busy.read()) {
@@ -170,25 +174,33 @@ SC_MODULE(DMA) {
                 int flush_outputs_to_discard = total_inputs - total;
                 typename axi4<AxiCfg>::Addr addr = base_addr.read() + N_SIZE * bytesPerBeat;
                 
-                // Address handshake for the write burst
-                AddrPayload aw_pay = create_addr_req(addr, total - 1);
-                mem_write_port.aw.Push(aw_pay);
-                
-                // Write active samples back to memory
-                for (int i = 0; i < total; ++i) {
-                    complex_t out_val = fft_in.Pop();
-                    typename axi4<AxiCfg>::Data packed = pack_complex<AxiCfg>(out_val);
-                    WritePayload w_pay = create_write_payload(packed, i == total - 1);
-                    mem_write_port.w.Push(w_pay);
+                int remaining = total;
+                while (remaining > 0) {
+                    int len = (remaining > 256) ? 256 : remaining;
+                    
+                    // Address handshake for the write burst
+                    AddrPayload aw_pay = create_addr_req(addr, len - 1);
+                    mem_write_port.aw.Push(aw_pay);
+                    
+                    // Write active samples back to memory
+                    for (int i = 0; i < len; ++i) {
+                        complex_t out_val = fft_in.Pop();
+                        typename axi4<AxiCfg>::Data packed = pack_complex<AxiCfg>(out_val);
+                        WritePayload w_pay = create_write_payload(packed, i == len - 1);
+                        mem_write_port.w.Push(w_pay);
+                    }
+                    
+                    // Receive write response for this burst
+                    mem_write_port.b.Pop();
+                    
+                    addr += len * bytesPerBeat;
+                    remaining -= len;
                 }
                 
                 // Pop and discard trailing pipeline flush outputs
                 for (int i = 0; i < flush_outputs_to_discard; ++i) {
                     fft_in.Pop();
                 }
-                
-                // Receive write response
-                mem_write_port.b.Pop();
             }
             
             busy.write(false);
