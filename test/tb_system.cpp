@@ -5,6 +5,7 @@
 #include <ac_reset_signal_is.h>
 #include <axi/axi4.h>
 #include <mc_scverify.h>
+#include <axi/testbench/SlaveFromFile.h>
 #include <axi/testbench/Slave.h>
 #include <testbench/nvhls_rand.h>
 #include <boost/random/mersenne_twister.hpp>
@@ -16,6 +17,8 @@
 #include <string>
 #include <cmath>
 #include <top.h>
+#include <filesystem>
+#include <fft_types.h>
 
 using namespace sc_core;
 using namespace std;
@@ -23,12 +26,36 @@ using namespace std;
 // ============================================================================
 // Simulation Parameters & Configurations
 // ============================================================================
-const int samples = 256;
-const int N = 8;
-const int NUM_CORES = 6;
-const int HOP = 1;
-const int NUM_MULT = 4;
-const int NUM_ADD = 6;
+#ifndef FFT_SAMPLES
+#define FFT_SAMPLES 256
+#endif
+
+#ifndef FFT_N
+#define FFT_N 8
+#endif
+
+#ifndef FFT_NUM_CORES
+#define FFT_NUM_CORES 2
+#endif
+
+#ifndef FFT_HOP
+#define FFT_HOP 1
+#endif
+
+#ifndef FFT_NUM_MULT
+#define FFT_NUM_MULT 4
+#endif
+
+#ifndef FFT_NUM_ADD
+#define FFT_NUM_ADD 6
+#endif
+
+const int samples = FFT_SAMPLES;
+const int N = FFT_N;
+const int NUM_CORES = FFT_NUM_CORES;
+const int HOP = FFT_HOP;
+const int NUM_MULT = FFT_NUM_MULT;
+const int NUM_ADD = FFT_NUM_ADD;
 
 const unsigned int seed = 0;
 
@@ -81,7 +108,11 @@ SC_MODULE(testbench) {
     sc_vector<typename axi4<AxiCfg>::write::template chan<>> mem_write_chans;
 
     // Dedicated Slave Memories for each core
+#ifdef USE_SLAVE_FROM_FILE
+    sc_vector<SlaveFromFile<AxiCfg>> slaves;
+#else
     sc_vector<Slave<AxiCfg>> slaves;
+#endif
 
     // Design Under Test (DUT)
     Top<N, NUM_CORES, HOP, AxiCfg, NUM_MULT, NUM_ADD> fft_sys;
@@ -100,7 +131,11 @@ SC_MODULE(testbench) {
           num_samples("num_samples", NUM_CORES),
           mem_read_chans("mem_read_chans", NUM_CORES),
           mem_write_chans("mem_write_chans", NUM_CORES),
+#ifdef USE_SLAVE_FROM_FILE
+          slaves("slaves"),
+#else
           slaves("slaves", NUM_CORES),
+#endif
           fft_sys("fft_sys") 
     {
         Connections::set_sim_clk(&clk);
@@ -108,6 +143,46 @@ SC_MODULE(testbench) {
         fft_sys.clk(clk);
         fft_sys.rst_n(rst_n);
         fft_sys.start(start_signal);
+
+        // Determine output directory
+        const char* out_dir_env = std::getenv("SIM_OUT_DIR");
+        std::string out_dir = (out_dir_env != nullptr) ? out_dir_env : "out";
+        
+        // Create output directory and its data subfolder
+        std::filesystem::create_directories(out_dir + "/data");
+
+#ifdef USE_SLAVE_FROM_FILE
+        // Determine filenames for each core
+        const char* stim_file_env = std::getenv("STIMULUS_FILE");
+        std::vector<std::string> filenames(NUM_CORES);
+        
+        if (stim_file_env == nullptr) {
+            std::cerr << "Error: USE_SLAVE_FROM_FILE is defined but STIMULUS_FILE is not set!" << std::endl;
+            sc_report_handler::report(SC_ERROR, "Config error", "STIMULUS_FILE not set", __FILE__, __LINE__);
+        } else {
+            std::string stim_file_template(stim_file_env);
+            for (int c = 0; c < NUM_CORES; ++c) {
+                std::string filename = stim_file_template;
+                size_t pos = filename.find("%d");
+                if (pos != std::string::npos) {
+                    std::string filename_1 = filename;
+                    filename_1.replace(pos, 2, std::to_string(c + 1));
+                    std::ifstream f_test(filename_1);
+                    if (f_test.good()) {
+                        filename = filename_1;
+                    } else {
+                        filename.replace(pos, 2, std::to_string(c));
+                    }
+                }
+                filenames[c] = filename;
+            }
+        }
+
+        // Initialize slaves vector using custom filenames
+        slaves.init(NUM_CORES, [&](const char* name, int i) {
+            return new SlaveFromFile<AxiCfg>(name, filenames[i]);
+        });
+#endif
 
         // Connect Cores, Channels, and Slaves
         for (int i = 0; i < NUM_CORES; ++i) {
@@ -121,11 +196,11 @@ SC_MODULE(testbench) {
             slaves[i].if_rd(mem_read_chans[i]);
             slaves[i].if_wr(mem_write_chans[i]);
             
-            std::string r_filename = "out/data/core" + std::to_string(i) + "_input.csv";
+            std::string r_filename = out_dir + "/data/core" + std::to_string(i) + "_input.csv";
             r_csv_files[i].open(r_filename);
             r_csv_files[i] << "Timestamp,Real,Imaginary\n";
             
-            std::string w_filename = "out/data/core" + std::to_string(i) + "_output.csv";
+            std::string w_filename = out_dir + "/data/core" + std::to_string(i) + "_output.csv";
             w_csv_files[i].open(w_filename);
             w_csv_files[i] << "Timestamp,Real,Imaginary\n";
 
@@ -176,6 +251,9 @@ SC_MODULE(testbench) {
 
     // Simulates the main execution flow and performs memory verification
     void init_slave_memories() {
+#ifdef USE_SLAVE_FROM_FILE
+        std::cout << "@" << sc_time_stamp() << " Slave memories were initialized from files using SlaveFromFile." << std::endl;
+#else
         std::cout << "@" << sc_time_stamp() << " Initializing Slave memories with random traffic pattern..." << std::endl;
         boost::random::mt19937 gen(seed);
         boost::random::uniform_int_distribution<> uniform_rand;
@@ -194,6 +272,7 @@ SC_MODULE(testbench) {
                 slaves[c].validReadAddresses.push_back(byte_addr);
             }
         }
+#endif
     }
 
     bool verify_slave_memories() {

@@ -15,3 +15,4 @@ library
 
 # Temporary files
 ac_reset_signal_is.h
+__pycache__

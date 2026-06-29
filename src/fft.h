@@ -101,4 +101,39 @@ SC_MODULE(FFT) {
     }
 };
 
+// Specialization for N = 1 to prevent hanging and bypass the stage pipeline.
+template<int NUM_MULT, int NUM_ADD>
+class FFT<1, NUM_MULT, NUM_ADD> : public sc_module {
+public:
+    sc_in<bool> clk;
+    sc_in<bool> rst_n;
+    
+    In<complex_t> in_data;
+    Out<complex_t> out_data;
+    
+    SC_HAS_PROCESS(FFT);
+    FFT(sc_module_name name) : 
+        sc_module(name),
+        clk("clk"),
+        rst_n("rst_n"),
+        in_data("in_data"),
+        out_data("out_data")
+    {
+        SC_THREAD(bypass_thread);
+        sensitive << clk.pos();
+        async_reset_signal_is(rst_n, false);
+    }
+    
+    void bypass_thread() {
+        in_data.Reset();
+        out_data.Reset();
+        wait();
+        
+        while (true) {
+            complex_t val = in_data.Pop();
+            out_data.Push(val);
+        }
+    }
+};
+
 #endif  // FFT_H

@@ -1,0 +1,32 @@
+=== STDOUT ===
+
+Info: (I804) /IEEE_Std_1666/deprecated: deprecated function: sc_set_default_time_unit
+================================
+SETTING RANDOM SEED = 19650218
+================================
+Connections Clock: tb.clk Period: 1 ns
+@10 ns Initializing Slave memories with random traffic pattern...
+@15 ns Starting FFT system...
+@1296 ns Simulation complete. Verifying Slave memory...
+Core 0 [OK]
+Core 1 [OK]
+Core 2 [OK]
+Core 3 [OK]
+Verification Successful!
+
+Info: /OSCI/SystemC: Simulation stopped by user.
+TESTBENCH PASS
+
+Info: (I804) /IEEE_Std_1666/deprecated: You can turn off warnings about
+             IEEE 1666 deprecated features by placing this method call
+             as the first statement in your sc_main() function:
+
+  sc_core::sc_report_handler::set_actions( "/IEEE_Std_1666/deprecated",
+                                           sc_core::SC_DO_NOTHING );
+
+
+=== STDERR ===
+
+        SystemC 2.3.3-Accellera --- Jun 25 2026 10:44:53
+        Copyright (c) 1996-2018 by all Contributors,
+        ALL RIGHTS RESERVED

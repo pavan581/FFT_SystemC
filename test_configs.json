@@ -1,0 +1,92 @@
+[
+  {
+    "case": "test_01",
+    "params": {
+      "N": 8,
+      "NUM_CORES": 6,
+      "HOP": 1,
+      "SAMPLES": 256,
+      "use_file_stim": false
+    }
+  },
+  {
+    "case": "test_n1",
+    "params": {
+      "N": 1,
+      "NUM_CORES": 2,
+      "HOP": 1,
+      "SAMPLES": 64,
+      "use_file_stim": false
+    }
+  },
+  {
+    "case": "test_n2_random",
+    "params": {
+      "N": 2,
+      "NUM_CORES": 4,
+      "HOP": 1,
+      "SAMPLES": 128,
+      "use_file_stim": false
+    }
+  },
+  {
+    "case": "test_n4_random",
+    "params": {
+      "N": 4,
+      "NUM_CORES": 3,
+      "HOP": 2,
+      "SAMPLES": 128,
+      "use_file_stim": false
+    }
+  },
+  {
+    "case": "test_n4_stim",
+    "params": {
+      "N": 4,
+      "NUM_CORES": 1,
+      "HOP": 1,
+      "SAMPLES": 1024,
+      "use_file_stim": true
+    }
+  },
+  {
+    "case": "test_n8_file_stim",
+    "params": {
+      "N": 8,
+      "NUM_CORES": 2,
+      "HOP": 1,
+      "SAMPLES": 128,
+      "use_file_stim": true
+    }
+  },
+  {
+    "case": "test_n16_random",
+    "params": {
+      "N": 16,
+      "NUM_CORES": 2,
+      "HOP": 4,
+      "SAMPLES": 256,
+      "use_file_stim": false
+    }
+  },
+  {
+    "case": "test_n1024_less_data",
+    "params": {
+      "N": 1024,
+      "NUM_CORES": 2,
+      "HOP": 1,
+      "SAMPLES": 256,
+      "use_file_stim": false
+    }
+  },
+  {
+    "case": "test_n1024_full_data",
+    "params": {
+      "N": 1024,
+      "NUM_CORES": 2,
+      "HOP": 1,
+      "SAMPLES": 2048,
+      "use_file_stim": false
+    }
+  }
+]
