@@ -7,9 +7,8 @@ SETTING RANDOM SEED = 19650218
 Connections Clock: tb.clk Period: 1 ns
 @10 ns Slave memories were initialized from files using SlaveFromFile.
 @15 ns Starting FFT system...
-@20496 ns Simulation complete. Verifying Slave memory...
+@10256 ns Simulation complete. Verifying Slave memory...
 Core 0 [OK]
-Core 1 [OK]
 Verification Successful!
 
 Info: /OSCI/SystemC: Simulation stopped by user.

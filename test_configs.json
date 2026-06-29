@@ -46,7 +46,8 @@
       "NUM_CORES": 1,
       "HOP": 1,
       "SAMPLES": 1024,
-      "use_file_stim": true
+      "use_file_stim": true,
+      "fs": 128.0
     }
   },
   {
@@ -56,7 +57,8 @@
       "NUM_CORES": 2,
       "HOP": 1,
       "SAMPLES": 128,
-      "use_file_stim": true
+      "use_file_stim": true,
+      "fs": 128.0
     }
   },
   {
@@ -86,7 +88,8 @@
       "NUM_CORES": 2,
       "HOP": 1,
       "SAMPLES": 2048,
-      "use_file_stim": false
+      "use_file_stim": true,
+      "fs": 128.0
     }
   }
 ]

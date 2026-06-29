@@ -4,25 +4,8 @@ import shutil
 import subprocess
 import time
 import json
+import argparse
 from generate_stimulus import generate_stimulus_file
-
-# List of test configurations
-# Loaded from test_configs.json if it exists, otherwise falls back to a default list
-config_file = "test_configs.json"
-if os.path.exists(config_file):
-    with open(config_file, "r") as f:
-        TEST_CONFIGS = json.load(f)
-else:
-    TEST_CONFIGS = [
-    {"case": "test_default", 
-    "params": {
-        "N": 8, 
-        "NUM_CORES": 6, 
-        "HOP": 1, 
-        "SAMPLES": 256, 
-        "use_file_stim": False } 
-    }
-]
 
 def run_command(cmd, env=None):
     """Runs a shell command and returns output, error, and return code."""
@@ -33,12 +16,35 @@ def main():
     print("=" * 60)
     print(" FFT SystemC Multi-Configuration Test Runner")
     print("=" * 60)
+
+    parser = argparse.ArgumentParser(description="Run automated test script for FFT SystemC")
+    parser.add_argument("--config", type=str, default="test_configs.json",
+                        help="Configuration file")
+    args = parser.parse_args()
     
     # Base directory for test runs
     test_runs_dir = "out/test_runs"
     # if os.path.exists(test_runs_dir):
     #     shutil.rmtree(test_runs_dir)
     os.makedirs(test_runs_dir, exist_ok=True)
+
+    # List of test configurations
+    # Loaded from test_configs.json if it exists, otherwise falls back to a default list
+    config_file = args.config
+    if os.path.exists(config_file):
+        with open(config_file, "r") as f:
+            TEST_CONFIGS = json.load(f)
+    else:
+        TEST_CONFIGS = [
+        {"case": "test_default", 
+        "params": {
+            "N": 8, 
+            "NUM_CORES": 6, 
+            "HOP": 1, 
+            "SAMPLES": 256, 
+            "use_file_stim": False } 
+        }
+        ]
     
     results = []
     
@@ -84,12 +90,17 @@ def main():
         sim_out_dir = os.path.join(test_runs_dir, name)
         run_env["SIM_OUT_DIR"] = sim_out_dir
         if os.path.exists(sim_out_dir):
-            print("Overwriting previous test run")
+            print("  Overwriting previous test run")
         os.makedirs(sim_out_dir, exist_ok=True)
         
         if use_file_stim:
             run_env["STIMULUS_FILE"] = os.path.join(sim_out_dir, "stimulus_core_%d.csv")
-            
+            for i in range(num_cores):
+                filename = run_env["STIMULUS_FILE"] % (i + 1)
+                if not os.path.isfile(filename):
+                    generate_stimulus_file(filename, samples, i)
+                    print(f"  Generated stimulus file: {filename}")   
+
         # Execute simulation
         print("  Simulating...")
         start_time = time.time()
@@ -106,7 +117,7 @@ def main():
             
         # Analyze outcome
         if "TESTBENCH PASS" in sim_out and sim_rc == 0:
-            print(f"  [ PASSED ] in {elapsed:.2f} seconds")
+            print(f"[ PASSED ] in {elapsed:.2f} seconds")
             results.append((name, "PASSED", elapsed))
             
             # Run plot output script
@@ -119,6 +130,8 @@ def main():
                 f"--output_files \"{os.path.join(sim_out_dir, 'data/core{}_output.csv')}\" "
                 f"--out_img_dir \"{os.path.join(sim_out_dir, 'img')}\""
             )
+            if "fs" in params:
+                plot_cmd += f" --fs {params['fs']}"
             plot_out, plot_err, plot_rc = run_command(plot_cmd)
             if plot_rc != 0:
                 print(f"  [ WARNING ] Plot generation failed: {plot_err.strip()}")
