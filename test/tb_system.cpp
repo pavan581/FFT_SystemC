@@ -376,15 +376,77 @@ SC_MODULE(testbench) {
 // Simulation Main Entry Point
 // ============================================================================
 int sc_main(int argc, char *argv[]) {
+    sc_report_handler::set_actions( "/IEEE_Std_1666/deprecated", SC_DO_NOTHING );
     sc_set_default_time_unit(1.0, SC_NS); 
 
     nvhls::set_random_seed();
 
     testbench tb("tb");
 
+    // Enable VCD tracing
+    const char* out_dir_env = std::getenv("SIM_OUT_DIR");
+    std::string out_dir = (out_dir_env != nullptr) ? out_dir_env : "out";
+    std::string vcd_path = out_dir + "/trace";
+    sc_trace_file *tf = sc_create_vcd_trace_file(vcd_path.c_str());
+    if (tf) {
+        // Trace top-level testbench signals grouped under Control
+        sc_trace(tf, tb.clk, "Control.clk");
+        sc_trace(tf, tb.rst_n, "Control.rst_n");
+        sc_trace(tf, tb.start_signal, "Control.start_signal");
+        
+        // Trace Top module stagger status signals grouped under Stagger
+        sc_trace(tf, tb.fft_sys.active_stagger, "Stagger.active");
+        sc_trace(tf, tb.fft_sys.stagger_counter, "Stagger.counter");
+        
+        for (int i = 0; i < NUM_CORES; ++i) {
+            std::string core_prefix = "Core" + std::to_string(i) + ".";
+            sc_trace(tf, tb.base_addrs[i], (core_prefix + "base_addr").c_str());
+            sc_trace(tf, tb.num_samples[i], (core_prefix + "num_samples").c_str());
+            sc_trace(tf, tb.fft_sys.core_starts[i], (core_prefix + "start").c_str());
+            sc_trace(tf, tb.fft_sys.core_busy[i], (core_prefix + "busy").c_str());
+
+            // Trace AXI Read Channels grouped under Core<i>.AXI.Read
+            sc_trace(tf, tb.mem_read_chans[i].ar.in_val, (core_prefix + "AXI_AR.ar_val").c_str());
+            sc_trace(tf, tb.mem_read_chans[i].ar.in_rdy, (core_prefix + "AXI_AR.ar_rdy").c_str());
+            sc_trace(tf, tb.mem_read_chans[i].ar.in_msg, (core_prefix + "AXI_AR.ar_msg").c_str());
+
+            sc_trace(tf, tb.mem_read_chans[i].r.in_val, (core_prefix + "AXI_R.r_val").c_str());
+            sc_trace(tf, tb.mem_read_chans[i].r.in_rdy, (core_prefix + "AXI_R.r_rdy").c_str());
+            sc_trace(tf, tb.mem_read_chans[i].r.in_msg, (core_prefix + "AXI_R.r_msg").c_str());
+
+            // Trace AXI Write Channels grouped under Core<i>.AXI.Write
+            sc_trace(tf, tb.mem_write_chans[i].aw.in_val, (core_prefix + "AXI_AW.aw_val").c_str());
+            sc_trace(tf, tb.mem_write_chans[i].aw.in_rdy, (core_prefix + "AXI_AW.aw_rdy").c_str());
+            sc_trace(tf, tb.mem_write_chans[i].aw.in_msg, (core_prefix + "AXI_AW.aw_msg").c_str());
+
+            sc_trace(tf, tb.mem_write_chans[i].w.in_val, (core_prefix + "AXI_W.w_val").c_str());
+            sc_trace(tf, tb.mem_write_chans[i].w.in_rdy, (core_prefix + "AXI_W.w_rdy").c_str());
+            sc_trace(tf, tb.mem_write_chans[i].w.in_msg, (core_prefix + "AXI_W.w_msg").c_str());
+
+            // Trace AXI Write Response Channel grouped under Core<i>.AXI.Write
+            sc_trace(tf, tb.mem_write_chans[i].b.in_val, (core_prefix + "AXI_B.b_val").c_str());
+            sc_trace(tf, tb.mem_write_chans[i].b.in_rdy, (core_prefix + "AXI_B.b_rdy").c_str());
+            sc_trace(tf, tb.mem_write_chans[i].b.in_msg, (core_prefix + "AXI_B.b_msg").c_str());
+
+            // Trace Core Internal Handshake Channels (DMA <-> FFT) grouped under Core<i>.Internal
+            sc_trace(tf, tb.fft_sys.cores[i].dma_to_fft_chan.in_val, (core_prefix + "Internal.dma_to_fft_val").c_str());
+            sc_trace(tf, tb.fft_sys.cores[i].dma_to_fft_chan.in_rdy, (core_prefix + "Internal.dma_to_fft_rdy").c_str());
+            sc_trace(tf, tb.fft_sys.cores[i].dma_to_fft_chan.in_msg, (core_prefix + "Internal.dma_to_fft_msg").c_str());
+
+            sc_trace(tf, tb.fft_sys.cores[i].fft_to_dma_chan.in_val, (core_prefix + "Internal.fft_to_dma_val").c_str());
+            sc_trace(tf, tb.fft_sys.cores[i].fft_to_dma_chan.in_rdy, (core_prefix + "Internal.fft_to_dma_rdy").c_str());
+            sc_trace(tf, tb.fft_sys.cores[i].fft_to_dma_chan.in_msg, (core_prefix + "Internal.fft_to_dma_msg").c_str());
+        }
+    }
+
     sc_report_handler::set_actions(SC_ERROR, SC_DISPLAY);
 
     sc_start();
+
+    // Close VCD tracing
+    if (tf) {
+        sc_close_vcd_trace_file(tf);
+    }
 
     bool rc = (sc_report_handler::get_count(SC_ERROR) > 0);
     if (rc) 
