@@ -1,13 +1,9 @@
 /*
  * stage.h
  *
- * Implements a single processing stage in the radix-2 Decimation-In-Frequency (DIF)
- * FFT computation pipeline.
- *
- * Each stage operates in a two-phase loop: storing the first half of the block into
- * a feedback delay buffer, and performing butterfly additions and subtractions 
- * with the second half. Twiddle factors are precomputed at construction time and
- * stored in a vector lookup table to avoid runtime trigonometric execution overhead.
+ * Implementation of a single Decimation-In-Frequency (DIF) radix-2 butterfly stage.
+ * Alternates between storing the first half of incoming data in a feedback delay buffer
+ * and executing butterfly calculations on the second half using local twiddle factor lookups.
  */
 
 #ifndef STAGE_H
@@ -20,7 +16,7 @@
 
 using namespace Connections;
 
-// Abstract base class for all FFT pipeline stages.
+// Base class for FFT pipeline stages
 class StageBase : public sc_module {
 public:
     StageBase(sc_module_name name) : sc_module(name) {}
@@ -76,15 +72,15 @@ public:
             }
             
             // Phase 2: Compute
-            // Perform butterfly calculation on the second half of the inputs
+            // Radix-2 butterfly computations on second half of block
             for (int k = 0; k < delay_len; ++k) {
                 complex_t val_b = in_data.Pop();
                 complex_t val_a = buf[k];
                 
-                // Retrieve precomputed twiddle factor
+                // Twiddle factor lookup
                 complex_t w = twiddles[k];
                 
-                // Model multi-cycle butterfly latency
+                // Butterfly latency cycles
                 if (alu_cycles > 1) {
                     wait(alu_cycles - 1);
                 }
@@ -99,7 +95,7 @@ public:
         }
     }
     
-    // Calculates butterfly execution cycles based on available hardware units.
+    // Compute cycles based on hardware resource limits
     static int calc_latency(int n_mult, int n_add) {
         if (n_mult >= 4 && n_add >= 6) {
             return 1; // Single-cycle butterfly
@@ -124,7 +120,7 @@ public:
     {
         alu_cycles = calc_latency(n_mult, n_add);
         
-        // Precalculate twiddle factors to avoid runtime cos/sin overhead
+        // Precalculate twiddle table
         twiddles.resize(delay_len);
         const double PI = 3.14159265358979323846;
         for (int k = 0; k < delay_len; ++k) {
@@ -134,7 +130,7 @@ public:
         
         SC_THREAD(stage_thread);
         sensitive << clk.pos();
-        async_reset_signal_is(rst_n, false); // Active low reset
+        async_reset_signal_is(rst_n, false); // Active-low reset
     }
 };
 

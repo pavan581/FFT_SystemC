@@ -1,12 +1,9 @@
 /*
  * dma.h
  *
- * Implements the Direct Memory Access (DMA) controller module.
- *
- * The DMA controller manages AXI4 transactional requests to stream inputs from
- * shared memory to the FFT core, and write computed frequency bins back to memory.
- * It uses three concurrent SC_THREADs to request read addresses, unpack and pad input
- * data, and pack and write-back output data.
+ * Direct Memory Access (DMA) controller for AXI4 interface transactions.
+ * Manages independent concurrent threads for address generation, read streaming,
+ * and write-back streaming to move complex values between shared memory and the FFT core.
  */
 
 #ifndef DMA_H
@@ -26,7 +23,7 @@ using namespace sc_core;
 using namespace axi;
 using namespace Connections;
 
-// Direct Memory Access (DMA) controller for driving FFT core data transfers over AXI.
+// AXI4 DMA controller
 template<typename AxiCfg, int N_SIZE = 4, int NUM_MULT = 4, int NUM_ADD = 6>
 SC_MODULE(DMA) {
     sc_in<bool> clk;
@@ -73,7 +70,7 @@ SC_MODULE(DMA) {
         return w_pay;
     }
 
-    // Calculates overall FFT pipeline latency under given ALU resource constraints
+    // Compute pipeline latency under resource limits
     static int calc_pipeline_latency() {
         int num_stages = (int)std::log2(N_SIZE);
         int total_latency = 0;
@@ -87,7 +84,7 @@ SC_MODULE(DMA) {
         return total_latency;
     }
 
-    // Thread 1: Requests read addresses on AXI AR channel
+    // AXI read address generator
     void read_addr_thread() {
         mem_read_port.ar.Reset();
         wait();
@@ -116,7 +113,7 @@ SC_MODULE(DMA) {
         }
     }
 
-    // Thread 2: Receives AXI read data, unpacks it, and streams to FFT
+    // AXI read data stream reader
     void read_data_thread() {
         mem_read_port.r.Reset();
         fft_out.Reset();
@@ -133,14 +130,14 @@ SC_MODULE(DMA) {
                 int total_inputs = ((total + latency + N_SIZE - 1) / N_SIZE) * N_SIZE;
                 int flush_inputs_to_push = total_inputs - total;
                 
-                // Read and unpack samples from memory
+                // Read and unpack samples from AXI R
                 for (int i = 0; i < total; ++i) {
                     ReadPayload resp = mem_read_port.r.Pop();
                     complex_t sample = unpack_complex<AxiCfg>(resp.data);
                     fft_out.Push(sample);
                 }
                 
-                // Push trailing zeros to flush pipeline to block boundary
+                // Flush pipeline with zeros
                 for (int i = 0; i < flush_inputs_to_push; ++i) {
                     fft_out.Push(complex_t(0.0, 0.0));
                 }
@@ -152,7 +149,7 @@ SC_MODULE(DMA) {
         }
     }
 
-    // Thread 3: Collects FFT results, packs and writes them back over AXI, and discards flush samples
+    // AXI write data streamer
     void write_thread() {
         mem_write_port.aw.Reset();
         mem_write_port.w.Reset();
@@ -178,7 +175,7 @@ SC_MODULE(DMA) {
                 while (remaining > 0) {
                     int len = (remaining > 256) ? 256 : remaining;
                     
-                    // Address handshake for the write burst
+                    // Address handshake for write burst
                     AddrPayload aw_pay = create_addr_req(addr, len - 1);
                     mem_write_port.aw.Push(aw_pay);
                     
@@ -190,14 +187,14 @@ SC_MODULE(DMA) {
                         mem_write_port.w.Push(w_pay);
                     }
                     
-                    // Receive write response for this burst
+                    // Receive write response
                     mem_write_port.b.Pop();
                     
                     addr += len * bytesPerBeat;
                     remaining -= len;
                 }
                 
-                // Pop and discard trailing pipeline flush outputs
+                // Discard trailing flush outputs
                 for (int i = 0; i < flush_outputs_to_discard; ++i) {
                     fft_in.Pop();
                 }

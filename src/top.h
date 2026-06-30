@@ -1,12 +1,9 @@
 /*
  * top.h
  *
- * Coordinates the multi-core interleaved FFT execution.
- *
- * It instantiates an array of 'Core' modules, each combining a DMA and an FFT core,
- * and routes their read/write ports to the top-level. A central staggering control 
- * state machine launches the cores sequentially using the configured 'HOP_SIZE' delay,
- * reducing peak bandwidth and enabling temporally interleaved multi-core operation.
+ * Interleaved multi-core FFT wrapper module.
+ * Controls the staggered activation of individual processing cores using a HOP_SIZE
+ * delay state machine to optimize memory bus bandwidth and throughput.
  */
 
 #ifndef TOP_FFT_H
@@ -20,14 +17,14 @@
 using namespace sc_core;
 using namespace axi;
 
-// Top wrapper module coordinating multiple FFT processing cores with staggered execution.
+// Multi-core staggered FFT coordinator
 template<int N_SIZE, int NUM_CORES, int HOP_SIZE, typename AxiCfg, int NUM_MULT=4, int NUM_ADD=6>
 SC_MODULE(Top) {
     sc_in<bool> clk;
     sc_in<bool> rst_n; // Active-low reset
     sc_in<bool> start;
 
-    // External AXI ports for memory access (default port types)
+    // External AXI ports
     sc_vector<typename axi4<AxiCfg>::read::template master<>> mem_read_ports;
     sc_vector<typename axi4<AxiCfg>::write::template master<>> mem_write_ports;
     
@@ -58,7 +55,7 @@ SC_MODULE(Top) {
     {
         for (int i = 0; i < NUM_CORES; ++i) {
             cores[i].clk(clk);
-            cores[i].rst_n(rst_n); // Core rst_n input is bound to rst_n
+            cores[i].rst_n(rst_n);
             cores[i].start(core_starts[i]);
             cores[i].base_addr(base_addrs[i]);
             cores[i].num_samples(num_samples[i]);
@@ -72,7 +69,7 @@ SC_MODULE(Top) {
         sensitive << clk.pos();
     }
 
-    // Handles staggering of core launches to balance bus utilization
+    // Stagger launches to smooth bus traffic
     void control_logic() {
         if (!rst_n.read()) {
             active_stagger.write(false);

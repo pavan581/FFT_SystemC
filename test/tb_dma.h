@@ -15,7 +15,7 @@ typedef axi::cfg::standard AxiCfg;
 
 SC_MODULE(Testbench) {
     sc_clock clk;
-    sc_signal<bool> rst_n; // Unified active-low reset for DMA and Slave
+    sc_signal<bool> rst_n; // Active-low reset
     
     // Control signals
     sc_signal<bool> start;

@@ -1,11 +1,9 @@
 /*
  * fft.h
  *
- * Implements the N-point Fast Fourier Transform (FFT) core cascade.
- *
- * It dynamically instantiates log2(N) serial pipeline stages using a recursive
- * helper structure ('StageInstantiator') and routes internal Combinational channels
- * between adjacent stages to implement the complete DIF processing pipeline.
+ * Implementation of the N-point radix-2 DIF FFT cascade.
+ * Uses a recursive template mechanism to instantiate log2(N) connected stages in series,
+ * with a specialization for N=1 to bypass computation.
  */
 
 #ifndef FFT_H
@@ -19,7 +17,7 @@
 
 using namespace Connections;
 
-// Helper template to recursively instantiate FFT stages.
+// Recursive template to instantiate FFT stages
 template<int STAGE_SIZE, int NUM_MULT, int NUM_ADD>
 struct StageInstantiator {
     static void instantiate(std::vector<StageBase*>& stages,
@@ -40,7 +38,7 @@ struct StageInstantiator {
             
             stage->out_data(*chan);
             
-            // Recurse to instantiate the next stage
+            // Instantiate the next stage recursively
             StageInstantiator<STAGE_SIZE / 2, NUM_MULT, NUM_ADD>::instantiate(
                 stages, stage_signals, index + 1, clk, rst_n
             );
@@ -48,7 +46,7 @@ struct StageInstantiator {
     }
 };
 
-// Base case for recursion (FFT stage of size 2).
+// Recursion base case (FFT stage of size 2)
 template<int NUM_MULT, int NUM_ADD>
 struct StageInstantiator<2, NUM_MULT, NUM_ADD> {
     static void instantiate(std::vector<StageBase*>& stages,
@@ -64,7 +62,7 @@ struct StageInstantiator<2, NUM_MULT, NUM_ADD> {
     }
 };
 
-// Top-level FFT processor module.
+// N-point FFT processor
 template<int N, int NUM_MULT=4, int NUM_ADD=6>
 SC_MODULE(FFT) {
     sc_in<bool> clk;
@@ -77,7 +75,7 @@ SC_MODULE(FFT) {
     std::vector<Combinational<complex_t>*> stage_signals;
     
     SC_CTOR(FFT) {
-        // Instantiate the cascade of stages recursively
+        // Instantiate stages
         StageInstantiator<N, NUM_MULT, NUM_ADD>::instantiate(stages, stage_signals, 0, clk, rst_n);
         
         // Connect stages in series
@@ -101,7 +99,7 @@ SC_MODULE(FFT) {
     }
 };
 
-// Specialization for N = 1 to prevent hanging and bypass the stage pipeline.
+// Specialization for N=1 bypass
 template<int NUM_MULT, int NUM_ADD>
 class FFT<1, NUM_MULT, NUM_ADD> : public sc_module {
 public:

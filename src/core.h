@@ -1,13 +1,9 @@
 /*
  * core.h
  *
- * Couples a single DMA controller and an FFT computation core into a unified
- * hardware block.
- *
- * It instantiates the DMA and FFT sub-modules, routes shared clock, reset, 
- * and control signals, and hooks up the DMA read/write master interfaces 
- * to external AXI port boundaries. The DMA and FFT communicate internally
- * through point-to-point Combinational handshake channels.
+ * Unified processing core wrapping one DMA controller and one FFT compute pipeline.
+ * Connects external AXI memory ports and manages internal handshake signals between
+ * the DMA and FFT computation pipeline.
  */
 
 #ifndef CORE_H
@@ -23,7 +19,7 @@ using namespace sc_core;
 using namespace axi;
 using namespace Connections;
 
-// Core wrapper integrating the DMA controller and the FFT processing pipeline.
+// Integrated processing core
 template<int N_SIZE, typename AxiCfg, int NUM_MULT=4, int NUM_ADD=6>
 SC_MODULE(Core) {
     sc_in<bool> clk;
@@ -35,11 +31,11 @@ SC_MODULE(Core) {
     sc_in<int> num_samples;
     sc_out<bool> busy;
     
-    // External AXI memory interface (default port types)
+    // AXI memory interface
     typename axi4<AxiCfg>::read::template master <> mem_read_port;
     typename axi4<AxiCfg>::write::template master <> mem_write_port;
     
-    // Inter-module channels connecting DMA <-> FFT
+    // Internal DMA <-> FFT channels
     Combinational<complex_t> dma_to_fft_chan;
     Combinational<complex_t> fft_to_dma_chan;
     
@@ -54,7 +50,7 @@ SC_MODULE(Core) {
           dma("dma"),
           fft("fft")
     {
-        // DMA port bindings
+        // DMA bindings
         dma.clk(clk);
         dma.rst_n(rst_n);
         dma.start(start);
@@ -66,9 +62,9 @@ SC_MODULE(Core) {
         dma.fft_out(dma_to_fft_chan);
         dma.fft_in(fft_to_dma_chan);
         
-        // FFT port bindings
+        // FFT bindings
         fft.clk(clk);
-        fft.rst_n(rst_n); // FFT core expects active-low reset
+        fft.rst_n(rst_n);
         fft.in_data(dma_to_fft_chan);
         fft.out_data(fft_to_dma_chan);
     }

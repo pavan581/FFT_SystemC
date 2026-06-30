@@ -1,12 +1,10 @@
 /*
  * fft_types.h
  *
- * Defines the custom complex number data structure ('complex_t') used across the
- * system, equipped with basic arithmetic operators, magnitude computation, and
- * auto-generation trace methods.
+ * Complex number type definitions, math operators, and AXI4 stream packing/unpacking helpers.
  *
- * It also defines the centralized templates 'pack_complex' and 'unpack_complex' 
- * to serialize and deserialize complex data over AXI4 channels.
+ * Defines the complex_t structure with basic arithmetic operators for complex math,
+ * and provides template helpers to serialize/deserialize complex data over AXI4 channels.
  */
 
 #ifndef FFT_TYPES_H
@@ -18,14 +16,14 @@
 
 using namespace sc_core;
 
-// Custom complex number representation for SystemC signals and tracing.
+// Complex number representation for SystemC signals and tracing
 struct complex_t {
     double real;
     double imag;
 
     complex_t(double x = 0.0, double y = 0.0) : real(x), imag(y) {}
 
-    // Arithmetic operators
+    // Basic arithmetic operators
     complex_t operator + (const complex_t& b) const {
         return complex_t(real + b.real, imag + b.imag);
     }
@@ -45,28 +43,28 @@ struct complex_t {
         return std::sqrt(real * real + imag * imag);
     }
 
-    // Auto-generation macro for stream formatting and tracing.
-    // Double fields are marked V2 as they lack a synthesis-specific bit width.
+    // Auto-generation macro for tracing fields (double fields are marked V2)
     AUTO_GEN_FIELD_METHODS_V2(complex_t, (real, imag))
 };
 
-// Stream extraction helper
+// Stream input helper
 inline std::istream& operator>>(std::istream& is, complex_t& c) {
     is >> c.real >> c.imag;
     return is;
 }
 
-// Packs a complex number into a raw AXI data word.
+// Pack complex value into AXI data word
 template<typename AxiCfg>
 inline sc_uint<AxiCfg::dataWidth> pack_complex(double r, double i) {
-    static const int HALF_WIDTH = AxiCfg::dataWidth / 2;
-    int r_int = (int)std::round(r);
-    int i_int = (int)std::round(i);
     sc_uint<AxiCfg::dataWidth> res = 0;
     if (AxiCfg::dataWidth == 64) {
+        static const int HALF_WIDTH = AxiCfg::dataWidth / 2;
+        int r_int = (int)std::round(r);
+        int i_int = (int)std::round(i);
         res.range(AxiCfg::dataWidth - 1, HALF_WIDTH) = r_int;
         res.range(HALF_WIDTH - 1, 0) = i_int;
     } else {
+        int r_int = (int)std::round(r);
         res.range(AxiCfg::dataWidth - 1, 0) = r_int;
     }
     return res;
@@ -77,7 +75,7 @@ inline sc_uint<AxiCfg::dataWidth> pack_complex(const complex_t& val) {
     return pack_complex<AxiCfg>(val.real, val.imag);
 }
 
-// Unpacks a raw AXI data word into a complex number.
+// Unpack AXI data word into complex number
 template<typename AxiCfg>
 inline complex_t unpack_complex(sc_uint<AxiCfg::dataWidth> raw) {
     static const int HALF_WIDTH = AxiCfg::dataWidth / 2;
@@ -92,3 +90,4 @@ inline complex_t unpack_complex(sc_uint<AxiCfg::dataWidth> raw) {
 }
 
 #endif  // FFT_TYPES_H
+

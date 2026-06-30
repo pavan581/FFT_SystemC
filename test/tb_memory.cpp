@@ -11,27 +11,24 @@ Testbench::Testbench(sc_module_name name)
     master = new Master<AxiCfg, MyMasterCfg>("master");
     mem = new Memory<1024, AxiCfg>("mem");
 
-    // Connections Clock
     Connections::set_sim_clk(&clk);
 
-    // Bind clocks and resets (both use rst_n active-low)
+    // Bind clock and reset
     master->clk(clk);
     master->reset_bar(rst_n);
 
     mem->clk(clk);
     mem->rst_n(rst_n);
 
-    // Connect Master to Memory directly
     master->if_rd(read_chan);
     mem->read_port(read_chan);
 
     master->if_wr(write_chan);
     mem->write_port(write_chan);
 
-    // Done signal of the master
     master->done(done);
 
-    // VCD Tracing
+    // VCD setup
     tf = sc_create_vcd_trace_file("./out/vcd/memory_matchlib_trace");
     tf->set_time_unit(1, SC_PS);
     sc_trace(tf, clk, "clk");
@@ -56,7 +53,7 @@ void Testbench::stimuli() {
     rst_n.write(true);
     std::cout << "[MEM TB] Reset released. Starting Matchlib AXI Master verification..." << std::endl;
     
-    // Wait for done signal
+    // Wait for done
     while (true) {
         wait(10, SC_NS);
         if (done.read()) {

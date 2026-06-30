@@ -33,15 +33,13 @@ Testbench::Testbench(sc_module_name name)
     dma_inst->mem_write_port(write_chan);
     slave_inst->if_wr(write_chan);
 
-    // Bind DMA connections to the FFT channels
     dma_inst->fft_out(fft_out_chan);
     dma_inst->fft_in(fft_in_chan);
 
-    // Bind testbench connections to the FFT channels (reversed role)
     tb_fft_in(fft_out_chan);
     tb_fft_out(fft_in_chan);
 
-    // VCD Tracing
+    // VCD setup
     tf = sc_create_vcd_trace_file("./out/vcd/dma_matchlib_trace");
     tf->set_time_unit(1, SC_PS);
     sc_trace(tf, clk, "clk");
@@ -68,11 +66,10 @@ void Testbench::monitor() {
     wait();
 
     while (true) {
-        // Fetch streamed data from DMA
         complex_t val = tb_fft_in.Pop();
         std::cout << "[DMA TB] Received from DMA: " << val << " @ " << sc_time_stamp() << std::endl;
         
-        // Simulating FFT logic: add a bias constant and stream back
+        // Simulating FFT core behavior (bias bypass)
         complex_t out_val = val + complex_t(100.0, 0.0);
         tb_fft_out.Push(out_val);
     }
@@ -107,7 +104,7 @@ void Testbench::stimuli() {
     wait(10, SC_NS);
     start.write(false);
 
-    // Wait for DMA completion
+    // Wait for completion
     while (busy.read()) {
         wait(10, SC_NS);
     }
@@ -124,7 +121,7 @@ void Testbench::stimuli() {
         complex_t val = unpack_complex<AxiCfg>(raw);
         std::cout << "  Addr[" << (4 + i) << "] = " << val;
         
-        // Expected value: input + 100
+        // Expected: input + 100
         double expected_real = (double)i + 100.0;
         if (std::abs(val.real - expected_real) < 1e-2 && std::abs(val.imag) < 1e-2) {
             std::cout << " [OK]" << std::endl;

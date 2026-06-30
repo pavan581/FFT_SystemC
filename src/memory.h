@@ -1,12 +1,9 @@
 /*
  * memory.h
  *
- * Implements a Multi-Port shared SRAM module.
- *
- * It is configurable with template parameters specifying the number of write ports,
- * read ports, total memory depth, and AXI configuration struct. The module spawns
- * separate SystemC threads for each read and write interface to handle AXI transactions
- * concurrently, simulating a multi-port memory subsystem.
+ * Two-port SRAM simulation model supporting AXI4 read and write slave interfaces.
+ * Simulates concurrent multi-port access by spawning separate SystemC processes for
+ * independent read and write ports.
  */
 
 #ifndef MEMORY_H
@@ -20,7 +17,7 @@
 using namespace sc_core;
 using namespace axi;
 
-// A generic Single-Port Memory module supporting one AXI4 read slave port and one write slave port.
+// Single-port SRAM with AXI4 slave interfaces
 template<unsigned DEPTH=1024, typename AxiCfg=void>
 SC_MODULE(Memory) {
     sc_in<bool> clk;
@@ -35,7 +32,7 @@ SC_MODULE(Memory) {
     static const int bytesPerBeat = AxiCfg::dataWidth / 8;
     static const int addrShift = (AxiCfg::dataWidth == 64) ? 3 : 2;
 
-    // Read Port thread process
+    // Read port thread
     void read_port_process() {
         read_port.reset();
         wait();
@@ -67,7 +64,7 @@ SC_MODULE(Memory) {
         }
     }
 
-    // Write Port thread process
+    // Write port thread
     void write_port_process() {
         write_port.reset();
         wait();
@@ -117,7 +114,7 @@ SC_MODULE(Memory) {
         : read_port("read_port"),
           write_port("write_port") 
     {
-        // Initialize memory elements
+        // Initialize memory
         for (unsigned int k = 0; k < DEPTH; ++k) {
             mem[k] = 0;
         }

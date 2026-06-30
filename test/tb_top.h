@@ -39,7 +39,6 @@ SC_MODULE(Testbench) {
     sc_vector<typename axi4<AxiCfg>::read::template chan<>> mem_read_chans;
     sc_vector<typename axi4<AxiCfg>::write::template chan<>> mem_write_chans;
 
-    // DUT
     Top<N, NUM_CORES, HOP, AxiCfg, NUM_MULT, NUM_ADD>* fft_sys;
     
     sc_signal<bool> start_signal;
@@ -63,7 +62,7 @@ SC_MODULE(Testbench) {
     {
 
 
-        // 1. Memory instantiation
+        // Memory setup
         for (int i = 0; i < NUM_CORES; ++i) {
             mems[i].clk(clk);
             mems[i].rst_n(rst_n);
@@ -71,7 +70,7 @@ SC_MODULE(Testbench) {
             mems[i].write_port(mem_write_chans[i]);
         }
 
-        // 2. FFT Core complex instantiation
+        // Top DUT setup
         fft_sys = new Top<N, NUM_CORES, HOP, AxiCfg, NUM_MULT, NUM_ADD>("fft_sys");
         fft_sys->clk(clk);
         fft_sys->rst_n(rst_n);
@@ -93,7 +92,7 @@ SC_MODULE(Testbench) {
 
 
 
-        // 4. Trace configurations
+        // VCD trace setup
         std::string trace_name = "./out/vcd/InterleavedFFT-DMA_N" + std::to_string(N) + "_C" + std::to_string(NUM_CORES) + "_H" + std::to_string(HOP) + "_M" + std::to_string(NUM_MULT) + "_A" + std::to_string(NUM_ADD) + "_axi";
         tf = sc_create_vcd_trace_file(trace_name.c_str());
         tf->set_time_unit(1, SC_PS);
@@ -123,7 +122,7 @@ SC_MODULE(Testbench) {
 
 
 
-    // Direct memory writes from the testbench
+    // Memory write helper
     void axi_write(unsigned int addr, sc_uint<AxiCfg::dataWidth> data) {
         int target_core = -1;
         for (int c = 0; c < NUM_CORES; ++c) {
@@ -135,7 +134,7 @@ SC_MODULE(Testbench) {
             }
         }
         if (target_core == -1) {
-            // Fallback for initial writes before start_signal or when base_addrs might not cover the address
+            // Fallback for initial writes
             target_core = addr / (2 * N * bytesPerBeat);
             if (target_core < 0 || target_core >= NUM_CORES) {
                 target_core = 0;
@@ -171,7 +170,7 @@ SC_MODULE(Testbench) {
         return rev;
     }
 
-    // Verification check comparing actual memory contents against expected DFT results
+    // Validate outputs against expected DFT results
     bool verify_fft_output(int core_idx, int start_addr, int len) {
         int aligned_len = ((len + N - 1) / N) * N;
         
@@ -428,6 +427,7 @@ SC_MODULE(Testbench) {
         // ====================================================================
         std::cout << "\n[TEST 7] Continuous Stream (10 inputs for N=4)..." << std::endl;
         
+        wait();
         rst_n.write(false);
         wait(5);
         rst_n.write(true);

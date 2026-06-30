@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import os
-import shutil
 import subprocess
 import time
 import json
@@ -24,8 +23,6 @@ def main():
     
     # Base directory for test runs
     test_runs_dir = "out/test_runs"
-    # if os.path.exists(test_runs_dir):
-    #     shutil.rmtree(test_runs_dir)
     os.makedirs(test_runs_dir, exist_ok=True)
 
     # List of test configurations

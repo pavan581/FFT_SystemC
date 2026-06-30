@@ -29,10 +29,9 @@ struct MyMasterCfg {
 
 SC_MODULE(Testbench) {
     sc_clock clk;
-    sc_signal<bool> rst_n; // Unified active-low reset for Master and Memory
+    sc_signal<bool> rst_n; // Active-low reset
     sc_signal<bool> done;
 
-    // AXI channels (default port types)
     typename axi4<AxiCfg>::read::template chan<> read_chan;
     typename axi4<AxiCfg>::write::template chan<> write_chan;
 
