@@ -26,36 +26,6 @@ This project implements a **Multi-Core Interleaved FFT Processor** that processe
 
 ---
 
-## Summary of Modules
-
-### 1. `Top` ([top.h](file:///home/golakoti/FFT_SystemC/top.h))
-The top-level processor wrapper. It instantiates the array of cores and manages the execution flow. When a global start trigger is received, the staggering state machine fires `start` signals to individual cores delayed by `HOP_SIZE` cycles. This staggers the bus access cycles, smoothing memory bandwidth requirements and enabling parallel, interleaved throughput.
-
-### 2. `Core` ([core.h](file:///home/golakoti/FFT_SystemC/core.h))
-A module-level wrapper connecting one `DMA` controller and one `FFT` core. It routes the clock, reset, and control inputs to both blocks, binds the external AXI read and write masters to top-level ports, and connects the DMA to the FFT processing core via point-to-point handshake channels.
-
-### 3. `FFT` ([fft.h](file:///home/golakoti/FFT_SystemC/fft.h))
-The primary N-point FFT computation core. It recursively instantiates a series of `log₂(N)` butterfly stages to implement the decimation-in-frequency radix-2 butterfly cascade. It sets up clock, reset, and serial connection signals between each stage, outputting the calculated frequency bins in bit-reversed order.
-
-### 4. `Stage` ([stage.h](file:///home/golakoti/FFT_SystemC/stage.h))
-A single processing stage of the FFT cascade. It runs a loop that alternates between:
-- **Store & Forward**: Buffering incoming inputs into an internal feedback delay line while outputting previously stored butterfly differences.
-- **Compute**: Performing radix-2 butterfly calculations using precomputed twiddle factors retrieved from a local lookup table to avoid dynamic `cos` and `sin` calls. It supports resource-constrained latency modeling.
-
-### 5. `DMA` ([dma.h](file:///home/golakoti/FFT_SystemC/dma.h))
-A dedicated controller orchestrating memory transfers for its associated FFT core. It runs three parallel threads:
-- **Address Generation**: Pushes read requests onto the AXI AR channel.
-- **Read Streaming**: Pops read data beats, unpacks them into C++ complex variables, and feeds them into the FFT core, flushing the pipeline with zero-padding as needed.
-- **Write-back Streaming**: Pops results from the FFT core, packs them into AXI data beats, writes them to memory via the AXI AW/W channels, and pops write responses.
-
-### 6. `Memory` ([memory.h](file:///home/golakoti/FFT_SystemC/memory.h))
-A generic multi-port SRAM simulation model supporting multiple AXI4 read and write slave ports. It spawns independent thread processes for each read and write port to respond to incoming AXI transactions (AR/R and AW/W/B handshakes) concurrently.
-
-### 7. Custom Data Types ([fft_types.h](file:///home/golakoti/FFT_SystemC/fft_types.h))
-Defines the `complex_t` struct with standard operator overloading for complex arithmetic. It also provides the `pack_complex` and `unpack_complex` template functions used across the testbench, DMA, and monitor modules to slice and pack real and imaginary parts into AXI data words of configurable widths (e.g., 32-bit real-only or 64-bit real/imaginary).
-
----
-
 ## Architecture Diagram
 
 ```mermaid
