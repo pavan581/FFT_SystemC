@@ -113,6 +113,18 @@ SC_MODULE(testbench) {
     vector<vector<complex_t>> inputs{NUM_CORES, vector<complex_t>(samples)};
     int read_count[NUM_CORES];
 
+    double start_time_ns;
+    double core_end_times_ns[NUM_CORES];
+    bool core_done[NUM_CORES];
+    int write_count[NUM_CORES];
+
+    // Dynamic data flow tracking for exact cycle counts
+    double first_read_times_ns[NUM_CORES];
+    double first_write_times_ns[NUM_CORES];
+    double last_write_times_ns[NUM_CORES];
+    int read_stall_cycles[NUM_CORES];
+    int write_stall_cycles[NUM_CORES];
+
     SC_CTOR(testbench)
         : clk("clk", 1.0, SC_NS, 0.5, 0, SC_NS, true),
           rst_n("rst_n"),
@@ -195,7 +207,16 @@ SC_MODULE(testbench) {
             w_csv_files[i] << "Timestamp,Real,Imaginary\n";
 
             read_count[i] = 0;
+            write_count[i] = 0;
+            core_done[i] = false;
+            core_end_times_ns[i] = -1.0;
+            first_read_times_ns[i] = -1.0;
+            first_write_times_ns[i] = -1.0;
+            last_write_times_ns[i] = -1.0;
+            read_stall_cycles[i] = 0;
+            write_stall_cycles[i] = 0;
         }
+        start_time_ns = -1.0;
 
         SC_THREAD(run);
         
@@ -220,8 +241,23 @@ SC_MODULE(testbench) {
             return;
         }
         for (int c = 0; c < NUM_CORES; ++c) {
+            // Track active channel stall cycles only after first read has occurred (active streaming phase)
+            if (first_read_times_ns[c] >= 0.0 && !core_done[c]) {
+                // Count read starvation stalls (FFT wants data but DMA does not supply it)
+                if (!fft_sys.cores[c].dma_to_fft_chan.in_val.read() && fft_sys.cores[c].dma_to_fft_chan.in_rdy.read()) {
+                    read_stall_cycles[c]++;
+                }
+                // Count write backpressure stalls (FFT has output but DMA is not ready)
+                if (fft_sys.cores[c].fft_to_dma_chan.in_val.read() && !fft_sys.cores[c].fft_to_dma_chan.in_rdy.read()) {
+                    write_stall_cycles[c]++;
+                }
+            }
+
             // Read channel
             if (mem_read_chans[c].r.in_val.read() && mem_read_chans[c].r.in_rdy.read()) {
+                if (first_read_times_ns[c] < 0.0) {
+                    first_read_times_ns[c] = sc_time_stamp().to_double() / sc_time(1.0, SC_NS).to_double();
+                }
                 auto r_pay = mem_read_chans[c].r.in_msg.read();
                 complex_t val = unpack_complex<AxiCfg>(r_pay.data);
                 r_csv_files[c] << sc_time_stamp().to_string() << "," << val.real << "," << val.imag << "\n";
@@ -232,9 +268,20 @@ SC_MODULE(testbench) {
             }
             // Write channel
             if (mem_write_chans[c].w.in_val.read() && mem_write_chans[c].w.in_rdy.read()) {
+                if (first_write_times_ns[c] < 0.0) {
+                    first_write_times_ns[c] = sc_time_stamp().to_double() / sc_time(1.0, SC_NS).to_double();
+                }
+                last_write_times_ns[c] = sc_time_stamp().to_double() / sc_time(1.0, SC_NS).to_double();
                 auto w_pay = mem_write_chans[c].w.in_msg.read();
                 complex_t val = unpack_complex<AxiCfg>(w_pay.data);
                 w_csv_files[c] << sc_time_stamp().to_string() << "," << val.real << "," << val.imag << "\n";
+                if (write_count[c] < samples) {
+                    write_count[c]++;
+                    if (write_count[c] == samples) {
+                        core_end_times_ns[c] = sc_time_stamp().to_double() / sc_time(1.0, SC_NS).to_double();
+                        core_done[c] = true;
+                    }
+                }
             }
         }
     }
@@ -348,11 +395,60 @@ SC_MODULE(testbench) {
         }
 
         std::cout << "@" << sc_time_stamp() << " Starting FFT system..." << std::endl;
+        start_time_ns = sc_time_stamp().to_double() / sc_time(1.0, SC_NS).to_double();
         start_signal.write(true);
         wait(1, SC_NS);
         start_signal.write(false);
 
-        wait(samples * 10, SC_NS);
+        // Dynamically wait until all cores have written all their samples
+        bool all_done = false;
+        int timeout_cycles = samples * 100;
+        int elapsed_cycles = 0;
+        while (!all_done && elapsed_cycles < timeout_cycles) {
+            wait(1, SC_NS);
+            elapsed_cycles++;
+            all_done = true;
+            for (int i = 0; i < NUM_CORES; ++i) {
+                if (!core_done[i]) {
+                    all_done = false;
+                }
+            }
+        }
+
+        // Print performance result to stdout
+        double max_end_time = start_time_ns;
+        for (int i = 0; i < NUM_CORES; ++i) {
+            if (core_end_times_ns[i] > max_end_time) {
+                max_end_time = core_end_times_ns[i];
+            }
+        }
+        double total_cycles = max_end_time - start_time_ns;
+
+        // Calculate IDEAL and OVERHEAD dynamically from actual data flow events
+        double avg_overhead_cycles = 0;
+        for (int c = 0; c < NUM_CORES; ++c) {
+            double setup_overhead = first_read_times_ns[c] - start_time_ns;
+            double stalls = read_stall_cycles[c] + write_stall_cycles[c];
+            double tail_overhead = core_end_times_ns[c] - last_write_times_ns[c] - 1;
+            if (tail_overhead < 0) tail_overhead = 0;
+            
+            avg_overhead_cycles += (setup_overhead + stalls + tail_overhead);
+        }
+        avg_overhead_cycles /= NUM_CORES;
+        double avg_ideal_cycles = total_cycles - avg_overhead_cycles;
+
+        std::cout << "PERFORMANCE_RESULT: N=" << N 
+                  << " CORES=" << NUM_CORES 
+                  << " HOP=" << HOP 
+                  << " MULT=" << NUM_MULT 
+                  << " ADD=" << NUM_ADD 
+                  << " SAMPLES=" << samples 
+                  << " START=" << start_time_ns 
+                  << " END=" << max_end_time 
+                  << " CYCLES=" << total_cycles 
+                  << " IDEAL=" << avg_ideal_cycles 
+                  << " OVERHEAD=" << avg_overhead_cycles 
+                  << std::endl;
 
         bool all_pass = verify_slave_memories();
         if (!all_pass) {
