@@ -45,6 +45,9 @@ SC_MODULE(Top) {
 
     Top(sc_module_name name)
         : sc_module(name),
+          clk("clk"),
+          rst_n("rst_n"),
+          start("start"),
           mem_read_ports("mem_read_ports", NUM_CORES),
           mem_write_ports("mem_write_ports", NUM_CORES),
           base_addrs("base_addrs", NUM_CORES),
@@ -66,7 +69,7 @@ SC_MODULE(Top) {
         }
 
         SC_METHOD(control_logic);
-        sensitive << clk.pos();
+        sensitive << clk.pos() << rst_n.neg();
     }
 
     // Stagger launches to smooth bus traffic

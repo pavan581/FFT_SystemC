@@ -74,7 +74,12 @@ SC_MODULE(FFT) {
     std::vector<StageBase*> stages;
     std::vector<Combinational<complex_t>*> stage_signals;
     
-    SC_CTOR(FFT) {
+    SC_CTOR(FFT)
+        : clk("clk"),
+          rst_n("rst_n"),
+          in_data("in_data"),
+          out_data("out_data")
+    {
         // Instantiate stages
         StageInstantiator<N, NUM_MULT, NUM_ADD>::instantiate(stages, stage_signals, 0, clk, rst_n);
         

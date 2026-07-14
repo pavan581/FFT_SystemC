@@ -43,7 +43,13 @@ SC_MODULE(Core) {
     FFT<N_SIZE, NUM_MULT, NUM_ADD> fft;
     
     SC_CTOR(Core)
-        : mem_read_port("mem_read_port"),
+        : clk("clk"),
+          rst_n("rst_n"),
+          start("start"),
+          base_addr("base_addr"),
+          num_samples("num_samples"),
+          busy("busy"),
+          mem_read_port("mem_read_port"),
           mem_write_port("mem_write_port"),
           dma_to_fft_chan("dma_to_fft_chan"),
           fft_to_dma_chan("fft_to_dma_chan"),

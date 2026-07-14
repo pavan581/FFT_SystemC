@@ -211,6 +211,12 @@ SC_MODULE(DMA) {
     SC_HAS_PROCESS(DMA);
     DMA(sc_module_name name) 
         : sc_module(name),
+          clk("clk"),
+          rst_n("rst_n"),
+          start("start"),
+          base_addr("base_addr"),
+          num_samples("num_samples"),
+          busy("busy"),
           mem_read_port("mem_read_port"),
           mem_write_port("mem_write_port"),
           fft_out("fft_out"),

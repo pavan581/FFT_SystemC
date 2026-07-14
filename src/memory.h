@@ -111,7 +111,9 @@ SC_MODULE(Memory) {
     }
 
     SC_CTOR(Memory)
-        : read_port("read_port"),
+        : clk("clk"),
+          rst_n("rst_n"),
+          read_port("read_port"),
           write_port("write_port") 
     {
         // Initialize memory
