@@ -5,8 +5,6 @@
 #include <ac_reset_signal_is.h>
 #include <axi/axi4.h>
 #include <mc_scverify.h>
-#include <axi/testbench/SlaveFromFile.h>
-#include <axi/testbench/Slave.h>
 #include <testbench/nvhls_rand.h>
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_int_distribution.hpp>
@@ -19,6 +17,9 @@
 #include <top.h>
 #include <filesystem>
 #include <fft_types.h>
+
+#include <axi/testbench/SlaveFromFile.h>
+#include <axi/testbench/Slave.h>
 
 using namespace sc_core;
 using namespace std;
@@ -54,6 +55,8 @@ const int NUM_CORES = FFT_NUM_CORES;
 const int HOP = FFT_HOP;
 const int NUM_MULT = FFT_NUM_MULT;
 const int NUM_ADD = FFT_NUM_ADD;
+
+const sc_time CLK_PERIOD (2.0, SC_NS);
 
 const unsigned int seed = 0;
 
@@ -100,7 +103,7 @@ SC_MODULE(testbench) {
     sc_vector<typename axi4<AxiCfg>::read::template chan<>> mem_read_chans;
     sc_vector<typename axi4<AxiCfg>::write::template chan<>> mem_write_chans;
 
-#ifdef USE_SLAVE_FROM_FILE
+#ifdef USE_CSV_INIT
     sc_vector<SlaveFromFile<AxiCfg>> slaves;
 #else
     sc_vector<Slave<AxiCfg>> slaves;
@@ -111,6 +114,7 @@ SC_MODULE(testbench) {
     std::ofstream r_csv_files[NUM_CORES];
     std::ofstream w_csv_files[NUM_CORES];
     vector<vector<complex_t>> inputs{NUM_CORES, vector<complex_t>(samples)};
+    vector<vector<complex_t>> outputs{NUM_CORES, vector<complex_t>(samples)};
     int read_count[NUM_CORES];
 
     double start_time_ns;
@@ -126,14 +130,14 @@ SC_MODULE(testbench) {
     int write_stall_cycles[NUM_CORES];
 
     SC_CTOR(testbench)
-        : clk("clk", 1.0, SC_NS, 0.5, 0, SC_NS, true),
+        : clk("clk", CLK_PERIOD, 0.5, SC_ZERO_TIME, true),
           rst_n("rst_n"),
           start_signal("start_signal"),
           base_addrs("base_addrs", NUM_CORES),
           num_samples("num_samples", NUM_CORES),
           mem_read_chans("mem_read_chans", NUM_CORES),
           mem_write_chans("mem_write_chans", NUM_CORES),
-#ifdef USE_SLAVE_FROM_FILE
+#ifdef USE_CSV_INIT
           slaves("slaves"),
 #else
           slaves("slaves", NUM_CORES),
@@ -153,13 +157,13 @@ SC_MODULE(testbench) {
         // Create output directory and its data subfolder
         std::filesystem::create_directories(out_dir + "/data");
 
-#ifdef USE_SLAVE_FROM_FILE
+#ifdef USE_CSV_INIT
         // Determine filenames for each core
         const char* stim_file_env = std::getenv("STIMULUS_FILE");
         std::vector<std::string> filenames(NUM_CORES);
         
         if (stim_file_env == nullptr) {
-            std::cerr << "Error: USE_SLAVE_FROM_FILE is defined but STIMULUS_FILE is not set!" << std::endl;
+            std::cerr << "Error: USE_CSV_INIT is defined but STIMULUS_FILE is not set!" << std::endl;
             sc_report_handler::report(SC_ERROR, "Config error", "STIMULUS_FILE not set", __FILE__, __LINE__);
         } else {
             std::string stim_file_template(stim_file_env);
@@ -276,6 +280,7 @@ SC_MODULE(testbench) {
                 complex_t val = unpack_complex<AxiCfg>(w_pay.data);
                 w_csv_files[c] << sc_time_stamp().to_string() << "," << val.real << "," << val.imag << "\n";
                 if (write_count[c] < samples) {
+                    outputs[c][write_count[c]] = val;
                     write_count[c]++;
                     if (write_count[c] == samples) {
                         core_end_times_ns[c] = sc_time_stamp().to_double() / sc_time(1.0, SC_NS).to_double();
@@ -288,7 +293,7 @@ SC_MODULE(testbench) {
 
     // Initialize memory arrays
     void init_slave_memories() {
-#ifdef USE_SLAVE_FROM_FILE
+#ifdef USE_CSV_INIT
         std::cout << "@" << sc_time_stamp() << " Slave memories were initialized from files using SlaveFromFile." << std::endl;
 #else
         std::cout << "@" << sc_time_stamp() << " Initializing Slave memories with random traffic pattern..." << std::endl;
@@ -341,14 +346,9 @@ SC_MODULE(testbench) {
             }
 
             for (int i = 0; i < len; ++i) {
-                uint64_t byte_addr = (N + i) * (AxiCfg::dataWidth / 8);
-                sc_uint<AxiCfg::dataWidth> raw = 0;
-                for (int j = 0; j < (AxiCfg::dataWidth / 8); j++) {
-                    raw = nvhls::set_slc(raw, slaves[c].localMem_wstrb[byte_addr + j], 8 * j);
-                }
-                complex_t actual = unpack_complex<AxiCfg>(raw);
+                complex_t actual = outputs[c][i];
                 complex_t exp = expected[i];
-
+                
                 double diff_real = std::abs(actual.real - std::round(exp.real));
                 double diff_imag = std::abs(actual.imag - std::round(exp.imag));
                 bool match = (diff_real < 1e-2) && (diff_imag < 1e-2);

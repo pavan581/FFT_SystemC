@@ -6,6 +6,8 @@ import json
 import argparse
 from generate_stimulus import generate_stimulus_file
 
+TARGET = "tb_system_wmem"
+
 def run_command(cmd, env=None):
     """Runs a shell command and returns output, error, and return code."""
     res = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=env)
@@ -19,15 +21,18 @@ def main():
     parser = argparse.ArgumentParser(description="Run automated test script for FFT SystemC")
     parser.add_argument("--config", type=str, default="test_configs.json",
                         help="Configuration file")
+    parser.add_argument("--case", type=str, help="Test Case to run", default=None)
     args = parser.parse_args()
     
+    config_file = args.config
+    tcase = args.case
+    
     # Base directory for test runs
-    test_runs_dir = "out/test_runs"
+    test_runs_dir = "out/test_runs_wmem"
     os.makedirs(test_runs_dir, exist_ok=True)
 
     # List of test configurations
     # Loaded from test_configs.json if it exists, otherwise falls back to a default list
-    config_file = args.config
     if os.path.exists(config_file):
         with open(config_file, "r") as f:
             TEST_CONFIGS = json.load(f)
@@ -47,6 +52,8 @@ def main():
     
     for config in TEST_CONFIGS:
         name = config["case"]
+        if tcase != None and name != tcase:
+            continue
         params = config["params"]
         N = params["N"]
         num_cores = params["NUM_CORES"]
@@ -58,7 +65,7 @@ def main():
         print(f"\n[ RUNNING ] {name} (N={N}, Cores={num_cores}, Hop={hop}, Samples={samples}, Adds={num_adds}, Muls={num_muls})")
         
         # Clean build artifacts of tb_system to force rebuild with new parameters
-        run_command("rm -f build/tb_system.o build/tb_system")
+        run_command(f"rm -f build/{TARGET}.o build/{TARGET}")
         
         # Build command with configuration parameters passed as compiler macros
         cxx_flags = (
@@ -70,9 +77,9 @@ def main():
             f"-DFFT_NUM_ADD={num_adds}"
         )
         if use_file_stim:
-            cxx_flags += " -DUSE_SLAVE_FROM_FILE"
+            cxx_flags += " -DUSE_CSV_INIT"
             
-        build_cmd = f"make build/tb_system EXTRA_CXXFLAGS=\"{cxx_flags}\""
+        build_cmd = f"make build/{TARGET} EXTRA_CXXFLAGS=\"{cxx_flags}\""
         
         print("  Compiling testbench...")
         build_out, build_err, build_rc = run_command(build_cmd)
@@ -90,19 +97,19 @@ def main():
             print("  Overwriting previous test run")
         os.makedirs(sim_out_dir, exist_ok=True)
         
-        if use_file_stim:
+        if use_file_stim and TARGET != "tb_system_wmem":
             run_env["STIMULUS_FILE"] = os.path.join(sim_out_dir, "stimulus_core_%d.csv")
             for i in range(num_cores):
                 filename = run_env["STIMULUS_FILE"] % (i + 1)
                 if not os.path.isfile(filename):
                     generate_stimulus_file(filename, samples, i)
-                    print(f"  Generated stimulus file: {filename}")   
+                    print(f"  Generated stimulus file: {filename}")
 
         # Execute simulation
         print("  Simulating...")
         start_time = time.time()
         # Direct execution of compiled binary
-        sim_out, sim_err, sim_rc = run_command("./build/tb_system", env=run_env)
+        sim_out, sim_err, sim_rc = run_command(f"./build/{TARGET}", env=run_env)
         elapsed = time.time() - start_time
         
         # Save logs
@@ -135,6 +142,8 @@ def main():
         else:
             print(f"  [ FAILED ] Simulation failed! Check logs at {sim_out_dir}/sim_log.txt")
             results.append((name, "FAILED", elapsed))
+
+        print("[ DONE ]")
             
     # Print Summary Table
     print("\n" + "=" * 60)

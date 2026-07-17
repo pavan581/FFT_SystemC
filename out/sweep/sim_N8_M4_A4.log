@@ -1,0 +1,15 @@
+================================
+SETTING RANDOM SEED = 19650218
+================================
+Connections Clock: tb.clk Period: 1 ns
+
+Info: (I702) default timescale unit used for tracing: 1 ps (out/trace.vcd)
+@10 ns Initializing Slave memories with random traffic pattern...
+@15 ns Starting FFT system...
+PERFORMANCE_RESULT: N=8 CORES=1 HOP=1 MULT=4 ADD=4 SAMPLES=4096 START=15 END=6692 CYCLES=6677 IDEAL=6674 OVERHEAD=3
+@6693 ns Simulation complete. Verifying Slave memory...
+Core 0 [OK]
+Verification Successful!
+
+Info: /OSCI/SystemC: Simulation stopped by user.
+TESTBENCH PASS

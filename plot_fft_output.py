@@ -36,6 +36,10 @@ def main():
             
         input_df = pd.read_csv(in_path)
         output_df = pd.read_csv(out_path)
+
+        if input_df.size == 0 and output_df.size == 0:
+            print(f"[WARN] No data for Core {i}")
+            continue
         
         input_df['Timestamp'] = pd.to_timedelta(input_df["Timestamp"]).dt.total_seconds().mul(1e9).astype(int)
         input_df['data'] = input_df['Real'] + 1j * input_df['Imaginary']

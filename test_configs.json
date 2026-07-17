@@ -6,7 +6,18 @@
       "NUM_CORES": 6,
       "HOP": 1,
       "SAMPLES": 256,
-      "use_file_stim": false
+      "use_file_stim": true
+    }
+  },
+  {
+    "case": "test_n8_fullfile",
+    "params":{
+      "N": 8,
+      "NUM_CORES": 1,
+      "HOP": 1,
+      "SAMPLES": 2048,
+      "use_file_stim": true,
+      "fs": 128.0
     }
   },
   {
@@ -16,7 +27,7 @@
       "NUM_CORES": 2,
       "HOP": 1,
       "SAMPLES": 64,
-      "use_file_stim": false
+      "use_file_stim": true
     }
   },
   {
@@ -26,7 +37,7 @@
       "NUM_CORES": 4,
       "HOP": 1,
       "SAMPLES": 128,
-      "use_file_stim": false
+      "use_file_stim": true
     }
   },
   {
@@ -36,7 +47,7 @@
       "NUM_CORES": 3,
       "HOP": 2,
       "SAMPLES": 128,
-      "use_file_stim": false
+      "use_file_stim": true
     }
   },
   {
@@ -68,7 +79,7 @@
       "NUM_CORES": 2,
       "HOP": 4,
       "SAMPLES": 256,
-      "use_file_stim": false
+      "use_file_stim": true
     }
   },
   {
@@ -78,7 +89,7 @@
       "NUM_CORES": 2,
       "HOP": 1,
       "SAMPLES": 256,
-      "use_file_stim": false
+      "use_file_stim": true
     }
   },
   {

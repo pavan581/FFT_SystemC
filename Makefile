@@ -19,6 +19,7 @@ INCDIRS += -I$(RAPIDJSON_HOME)/include
 INCDIRS += -I$(AC_TYPES)/include
 INCDIRS += -I$(AC_SIMUTILS)/include
 INCDIRS += -I$(MATCHLIB_EXAMPLES)/include
+INCDIRS += -I$(MEMORY)
 
 CXXFLAGS = -std=c++17 $(INCDIRS) -DSC_ALLOW_DEPRECATED_IEEE_API -DSC_INCLUDE_DYNAMIC_PROCESSES -DBOOST_NULLPTR=nullptr $(EXTRA_CXXFLAGS)
 LDFLAGS = -L$(SYSTEMC_LIB) -lsystemc -lm
@@ -141,6 +142,22 @@ run_system_tb: $(SYSTEM_TB_TARGET) $(OUT_DIR)
 	@echo "Output will be saved to: $(OUT_DIR)/log/sim_system_tb.txt"
 	@echo ""
 	@$(SYSTEM_TB_TARGET) | tee $(OUT_DIR)/log/sim_system_tb.txt
+
+# System Testbench with FI Memory
+SYS_TB_MEM_SRCS = tb_system_wmem.cpp
+SYS_TB_MEM_OBJS = $(addprefix $(BUILD_DIR)/, $(SYS_TB_MEM_SRCS:.cpp=.o))
+SYS_TB_MEM_TARGET = $(BUILD_DIR)/tb_system_wmem
+
+$(SYS_TB_MEM_TARGET): $(BUILD_DIR) $(SYS_TB_MEM_OBJS)
+	@echo "Linking $(SYS_TB_MEM_TARGET)..."
+	$(CXX) $(SYS_TB_MEM_OBJS) $(LDFLAGS) -o $(SYS_TB_MEM_TARGET)
+	@echo "Build successful!"
+
+run_system_tb_wmem: $(SYS_TB_MEM_TARGET) $(OUT_DIR)
+	@echo "Running System testbench..."
+	@echo "Output will be saved to: $(OUT_DIR)/log/sim_system_tb.txt"
+	@echo ""
+	@$(SYS_TB_MEM_TARGET) | tee $(OUT_DIR)/log/sim_system_tb.txt
 
 # Rule to generate the dummy catapult header for compatibility
 ac_reset_signal_is.h:

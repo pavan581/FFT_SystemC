@@ -1,0 +1,277 @@
+=== STDOUT ===
+================================
+SETTING RANDOM SEED = 19650218
+================================
+Connections Clock: tb.clk Period: 2 ns
+
+Info: (I702) default timescale unit used for tracing: 1 ps (out/test_runs_wmem/test_n1/trace.vcd)
+@20 ns Starting FFT system...
+24 ns tb.slaves_0 Received read request : id{0} addr{0} burst{} len{63} size{} cache{} auser{} 
+26 ns tb.slaves_1 Received read request : id{0} addr{0} burst{} len{63} size{} cache{} auser{} 
+32 ns tb.slaves_0 Sent Read Data: 00000000000000000
+34 ns tb.slaves_1 Sent Read Data: 00000000000000000
+38 ns tb.slaves_0 Sent Read Data: 00000002d00000000
+40 ns tb.slaves_1 Sent Read Data: 00000002d00000000
+56 ns tb.slaves_0 Received write request in memory: addr=[0x1] data=[00000000000000000] beat=0
+56 ns tb.slaves_0 Sent Read Data: 00000000b00000000
+58 ns tb.slaves_1 Received write request in memory: addr=[0x1] data=[00000000000000000] beat=0
+58 ns tb.slaves_1 Sent Read Data: 00000000b00000000
+74 ns tb.slaves_0 Received write request in memory: addr=[0x2] data=[00000002d00000000] beat=1
+74 ns tb.slaves_0 Sent Read Data: 00000000700000000
+76 ns tb.slaves_1 Received write request in memory: addr=[0x2] data=[00000002d00000000] beat=1
+76 ns tb.slaves_1 Sent Read Data: 00000000700000000
+92 ns tb.slaves_0 Received write request in memory: addr=[0x3] data=[00000000b00000000] beat=2
+92 ns tb.slaves_0 Sent Read Data: 00000000a00000000
+94 ns tb.slaves_1 Received write request in memory: addr=[0x3] data=[00000000b00000000] beat=2
+94 ns tb.slaves_1 Sent Read Data: 00000000a00000000
+110 ns tb.slaves_0 Received write request in memory: addr=[0x4] data=[00000000700000000] beat=3
+110 ns tb.slaves_0 Sent Read Data: 00000001400000000
+112 ns tb.slaves_1 Received write request in memory: addr=[0x4] data=[00000000700000000] beat=3
+112 ns tb.slaves_1 Sent Read Data: 00000001400000000
+128 ns tb.slaves_0 Received write request in memory: addr=[0x5] data=[00000000a00000000] beat=4
+128 ns tb.slaves_0 Sent Read Data: 00000000c00000000
+130 ns tb.slaves_1 Received write request in memory: addr=[0x5] data=[00000000a00000000] beat=4
+130 ns tb.slaves_1 Sent Read Data: 00000000c00000000
+146 ns tb.slaves_0 Received write request in memory: addr=[0x6] data=[00000001400000000] beat=5
+146 ns tb.slaves_0 Sent Read Data: 0fffffff200000000
+148 ns tb.slaves_1 Received write request in memory: addr=[0x6] data=[00000001400000000] beat=5
+148 ns tb.slaves_1 Sent Read Data: 0fffffff200000000
+164 ns tb.slaves_0 Received write request in memory: addr=[0x7] data=[00000000c00000000] beat=6
+164 ns tb.slaves_0 Sent Read Data: 00000000200000000
+166 ns tb.slaves_1 Received write request in memory: addr=[0x7] data=[00000000c00000000] beat=6
+166 ns tb.slaves_1 Sent Read Data: 00000000200000000
+182 ns tb.slaves_0 Received write request in memory: addr=[0x08] data=[0fffffff200000000] beat=7
+182 ns tb.slaves_0 Sent Read Data: 0ffffffe200000000
+184 ns tb.slaves_1 Received write request in memory: addr=[0x08] data=[0fffffff200000000] beat=7
+184 ns tb.slaves_1 Sent Read Data: 0ffffffe200000000
+200 ns tb.slaves_0 Received write request in memory: addr=[0x09] data=[00000000200000000] beat=8
+200 ns tb.slaves_0 Sent Read Data: 0ffffffd300000000
+202 ns tb.slaves_1 Received write request in memory: addr=[0x09] data=[00000000200000000] beat=8
+202 ns tb.slaves_1 Sent Read Data: 0ffffffd300000000
+218 ns tb.slaves_0 Received write request in memory: addr=[0x0A] data=[0ffffffe200000000] beat=9
+218 ns tb.slaves_0 Sent Read Data: 00000000600000000
+220 ns tb.slaves_1 Received write request in memory: addr=[0x0A] data=[0ffffffe200000000] beat=9
+220 ns tb.slaves_1 Sent Read Data: 00000000600000000
+236 ns tb.slaves_0 Received write request in memory: addr=[0x0B] data=[0ffffffd300000000] beat=10
+236 ns tb.slaves_0 Sent Read Data: 00000000a00000000
+238 ns tb.slaves_1 Received write request in memory: addr=[0x0B] data=[0ffffffd300000000] beat=10
+238 ns tb.slaves_1 Sent Read Data: 00000000a00000000
+254 ns tb.slaves_0 Received write request in memory: addr=[0x0C] data=[00000000600000000] beat=11
+254 ns tb.slaves_0 Sent Read Data: 0fffffffe00000000
+256 ns tb.slaves_1 Received write request in memory: addr=[0x0C] data=[00000000600000000] beat=11
+256 ns tb.slaves_1 Sent Read Data: 0fffffffe00000000
+272 ns tb.slaves_0 Received write request in memory: addr=[0x0D] data=[00000000a00000000] beat=12
+272 ns tb.slaves_0 Sent Read Data: 0fffffff100000000
+274 ns tb.slaves_1 Received write request in memory: addr=[0x0D] data=[00000000a00000000] beat=12
+274 ns tb.slaves_1 Sent Read Data: 0fffffff100000000
+290 ns tb.slaves_0 Received write request in memory: addr=[0x0E] data=[0fffffffe00000000] beat=13
+290 ns tb.slaves_0 Sent Read Data: 00000000d00000000
+292 ns tb.slaves_1 Received write request in memory: addr=[0x0E] data=[0fffffffe00000000] beat=13
+292 ns tb.slaves_1 Sent Read Data: 00000000d00000000
+308 ns tb.slaves_0 Received write request in memory: addr=[0x0F] data=[0fffffff100000000] beat=14
+308 ns tb.slaves_0 Sent Read Data: 00000003300000000
+310 ns tb.slaves_1 Received write request in memory: addr=[0x0F] data=[0fffffff100000000] beat=14
+310 ns tb.slaves_1 Sent Read Data: 00000003300000000
+326 ns tb.slaves_0 Received write request in memory: addr=[0x10] data=[00000000d00000000] beat=15
+326 ns tb.slaves_0 Sent Read Data: 00000000a00000000
+328 ns tb.slaves_1 Received write request in memory: addr=[0x10] data=[00000000d00000000] beat=15
+328 ns tb.slaves_1 Sent Read Data: 00000000a00000000
+344 ns tb.slaves_0 Received write request in memory: addr=[0x11] data=[00000003300000000] beat=16
+344 ns tb.slaves_0 Sent Read Data: 00000000400000000
+346 ns tb.slaves_1 Received write request in memory: addr=[0x11] data=[00000003300000000] beat=16
+346 ns tb.slaves_1 Sent Read Data: 00000000400000000
+362 ns tb.slaves_0 Received write request in memory: addr=[0x12] data=[00000000a00000000] beat=17
+362 ns tb.slaves_0 Sent Read Data: 00000000800000000
+364 ns tb.slaves_1 Received write request in memory: addr=[0x12] data=[00000000a00000000] beat=17
+364 ns tb.slaves_1 Sent Read Data: 00000000800000000
+380 ns tb.slaves_0 Received write request in memory: addr=[0x13] data=[00000000400000000] beat=18
+380 ns tb.slaves_0 Sent Read Data: 0ffffffea00000000
+382 ns tb.slaves_1 Received write request in memory: addr=[0x13] data=[00000000400000000] beat=18
+382 ns tb.slaves_1 Sent Read Data: 0ffffffea00000000
+398 ns tb.slaves_0 Received write request in memory: addr=[0x14] data=[00000000800000000] beat=19
+398 ns tb.slaves_0 Sent Read Data: 0fffffff200000000
+400 ns tb.slaves_1 Received write request in memory: addr=[0x14] data=[00000000800000000] beat=19
+400 ns tb.slaves_1 Sent Read Data: 0fffffff200000000
+416 ns tb.slaves_0 Received write request in memory: addr=[0x15] data=[0ffffffea00000000] beat=20
+416 ns tb.slaves_0 Sent Read Data: 0fffffff600000000
+418 ns tb.slaves_1 Received write request in memory: addr=[0x15] data=[0ffffffea00000000] beat=20
+418 ns tb.slaves_1 Sent Read Data: 0fffffff600000000
+434 ns tb.slaves_0 Received write request in memory: addr=[0x16] data=[0fffffff200000000] beat=21
+434 ns tb.slaves_0 Sent Read Data: 0fffffffc00000000
+436 ns tb.slaves_1 Received write request in memory: addr=[0x16] data=[0fffffff200000000] beat=21
+436 ns tb.slaves_1 Sent Read Data: 0fffffffc00000000
+452 ns tb.slaves_0 Received write request in memory: addr=[0x17] data=[0fffffff600000000] beat=22
+452 ns tb.slaves_0 Sent Read Data: 0ffffffe600000000
+454 ns tb.slaves_1 Received write request in memory: addr=[0x17] data=[0fffffff600000000] beat=22
+454 ns tb.slaves_1 Sent Read Data: 0ffffffe600000000
+470 ns tb.slaves_0 Received write request in memory: addr=[0x18] data=[0fffffffc00000000] beat=23
+470 ns tb.slaves_0 Sent Read Data: 0ffffffd900000000
+472 ns tb.slaves_1 Received write request in memory: addr=[0x18] data=[0fffffffc00000000] beat=23
+472 ns tb.slaves_1 Sent Read Data: 0ffffffd900000000
+488 ns tb.slaves_0 Received write request in memory: addr=[0x19] data=[0ffffffe600000000] beat=24
+488 ns tb.slaves_0 Sent Read Data: 00000001d00000000
+490 ns tb.slaves_1 Received write request in memory: addr=[0x19] data=[0ffffffe600000000] beat=24
+490 ns tb.slaves_1 Sent Read Data: 00000001d00000000
+506 ns tb.slaves_0 Received write request in memory: addr=[0x1A] data=[0ffffffd900000000] beat=25
+506 ns tb.slaves_0 Sent Read Data: 00000002200000000
+508 ns tb.slaves_1 Received write request in memory: addr=[0x1A] data=[0ffffffd900000000] beat=25
+508 ns tb.slaves_1 Sent Read Data: 00000002200000000
+524 ns tb.slaves_0 Received write request in memory: addr=[0x1B] data=[00000001d00000000] beat=26
+524 ns tb.slaves_0 Sent Read Data: 00000000400000000
+526 ns tb.slaves_1 Received write request in memory: addr=[0x1B] data=[00000001d00000000] beat=26
+526 ns tb.slaves_1 Sent Read Data: 00000000400000000
+542 ns tb.slaves_0 Received write request in memory: addr=[0x1C] data=[00000002200000000] beat=27
+542 ns tb.slaves_0 Sent Read Data: 00000000a00000000
+544 ns tb.slaves_1 Received write request in memory: addr=[0x1C] data=[00000002200000000] beat=27
+544 ns tb.slaves_1 Sent Read Data: 00000000a00000000
+560 ns tb.slaves_0 Received write request in memory: addr=[0x1D] data=[00000000400000000] beat=28
+560 ns tb.slaves_0 Sent Read Data: 00000000b00000000
+562 ns tb.slaves_1 Received write request in memory: addr=[0x1D] data=[00000000400000000] beat=28
+562 ns tb.slaves_1 Sent Read Data: 00000000b00000000
+578 ns tb.slaves_0 Received write request in memory: addr=[0x1E] data=[00000000a00000000] beat=29
+578 ns tb.slaves_0 Sent Read Data: 00000001700000000
+580 ns tb.slaves_1 Received write request in memory: addr=[0x1E] data=[00000000a00000000] beat=29
+580 ns tb.slaves_1 Sent Read Data: 00000001700000000
+596 ns tb.slaves_0 Received write request in memory: addr=[0x1F] data=[00000000b00000000] beat=30
+596 ns tb.slaves_0 Sent Read Data: 0fffffffe00000000
+598 ns tb.slaves_1 Received write request in memory: addr=[0x1F] data=[00000000b00000000] beat=30
+598 ns tb.slaves_1 Sent Read Data: 0fffffffe00000000
+614 ns tb.slaves_0 Received write request in memory: addr=[0x20] data=[00000001700000000] beat=31
+614 ns tb.slaves_0 Sent Read Data: 0fffffff700000000
+616 ns tb.slaves_1 Received write request in memory: addr=[0x20] data=[00000001700000000] beat=31
+616 ns tb.slaves_1 Sent Read Data: 0fffffff700000000
+632 ns tb.slaves_0 Received write request in memory: addr=[0x21] data=[0fffffffe00000000] beat=32
+632 ns tb.slaves_0 Sent Read Data: 0fffffffe00000000
+634 ns tb.slaves_1 Received write request in memory: addr=[0x21] data=[0fffffffe00000000] beat=32
+634 ns tb.slaves_1 Sent Read Data: 0fffffffe00000000
+650 ns tb.slaves_0 Received write request in memory: addr=[0x22] data=[0fffffff700000000] beat=33
+650 ns tb.slaves_0 Sent Read Data: 0ffffffd000000000
+652 ns tb.slaves_1 Received write request in memory: addr=[0x22] data=[0fffffff700000000] beat=33
+652 ns tb.slaves_1 Sent Read Data: 0ffffffd000000000
+668 ns tb.slaves_0 Received write request in memory: addr=[0x23] data=[0fffffffe00000000] beat=34
+668 ns tb.slaves_0 Sent Read Data: 0ffffffe700000000
+670 ns tb.slaves_1 Received write request in memory: addr=[0x23] data=[0fffffffe00000000] beat=34
+670 ns tb.slaves_1 Sent Read Data: 0ffffffe700000000
+686 ns tb.slaves_0 Received write request in memory: addr=[0x24] data=[0ffffffd000000000] beat=35
+686 ns tb.slaves_0 Sent Read Data: 00000000f00000000
+688 ns tb.slaves_1 Received write request in memory: addr=[0x24] data=[0ffffffd000000000] beat=35
+688 ns tb.slaves_1 Sent Read Data: 00000000f00000000
+704 ns tb.slaves_0 Received write request in memory: addr=[0x25] data=[0ffffffe700000000] beat=36
+704 ns tb.slaves_0 Sent Read Data: 00000000500000000
+706 ns tb.slaves_1 Received write request in memory: addr=[0x25] data=[0ffffffe700000000] beat=36
+706 ns tb.slaves_1 Sent Read Data: 00000000500000000
+722 ns tb.slaves_0 Received write request in memory: addr=[0x26] data=[00000000f00000000] beat=37
+722 ns tb.slaves_0 Sent Read Data: 0fffffff900000000
+724 ns tb.slaves_1 Received write request in memory: addr=[0x26] data=[00000000f00000000] beat=37
+724 ns tb.slaves_1 Sent Read Data: 0fffffff900000000
+740 ns tb.slaves_0 Received write request in memory: addr=[0x27] data=[00000000500000000] beat=38
+740 ns tb.slaves_0 Sent Read Data: 0fffffff400000000
+742 ns tb.slaves_1 Received write request in memory: addr=[0x27] data=[00000000500000000] beat=38
+742 ns tb.slaves_1 Sent Read Data: 0fffffff400000000
+758 ns tb.slaves_0 Received write request in memory: addr=[0x28] data=[0fffffff900000000] beat=39
+758 ns tb.slaves_0 Sent Read Data: 00000002400000000
+760 ns tb.slaves_1 Received write request in memory: addr=[0x28] data=[0fffffff900000000] beat=39
+760 ns tb.slaves_1 Sent Read Data: 00000002400000000
+776 ns tb.slaves_0 Received write request in memory: addr=[0x29] data=[0fffffff400000000] beat=40
+776 ns tb.slaves_0 Sent Read Data: 00000002800000000
+778 ns tb.slaves_1 Received write request in memory: addr=[0x29] data=[0fffffff400000000] beat=40
+778 ns tb.slaves_1 Sent Read Data: 00000002800000000
+794 ns tb.slaves_0 Received write request in memory: addr=[0x2A] data=[00000002400000000] beat=41
+794 ns tb.slaves_0 Sent Read Data: 0fffffffe00000000
+796 ns tb.slaves_1 Received write request in memory: addr=[0x2A] data=[00000002400000000] beat=41
+796 ns tb.slaves_1 Sent Read Data: 0fffffffe00000000
+812 ns tb.slaves_0 Received write request in memory: addr=[0x2B] data=[00000002800000000] beat=42
+812 ns tb.slaves_0 Sent Read Data: 00000000c00000000
+814 ns tb.slaves_1 Received write request in memory: addr=[0x2B] data=[00000002800000000] beat=42
+814 ns tb.slaves_1 Sent Read Data: 00000000c00000000
+830 ns tb.slaves_0 Received write request in memory: addr=[0x2C] data=[0fffffffe00000000] beat=43
+830 ns tb.slaves_0 Sent Read Data: 0fffffffb00000000
+832 ns tb.slaves_1 Received write request in memory: addr=[0x2C] data=[0fffffffe00000000] beat=43
+832 ns tb.slaves_1 Sent Read Data: 0fffffffb00000000
+848 ns tb.slaves_0 Received write request in memory: addr=[0x2D] data=[00000000c00000000] beat=44
+848 ns tb.slaves_0 Sent Read Data: 0ffffffea00000000
+850 ns tb.slaves_1 Received write request in memory: addr=[0x2D] data=[00000000c00000000] beat=44
+850 ns tb.slaves_1 Sent Read Data: 0ffffffea00000000
+866 ns tb.slaves_0 Received write request in memory: addr=[0x2E] data=[0fffffffb00000000] beat=45
+866 ns tb.slaves_0 Sent Read Data: 0fffffff600000000
+868 ns tb.slaves_1 Received write request in memory: addr=[0x2E] data=[0fffffffb00000000] beat=45
+868 ns tb.slaves_1 Sent Read Data: 0fffffff600000000
+884 ns tb.slaves_0 Received write request in memory: addr=[0x2F] data=[0ffffffea00000000] beat=46
+884 ns tb.slaves_0 Sent Read Data: 0fffffff700000000
+886 ns tb.slaves_1 Received write request in memory: addr=[0x2F] data=[0ffffffea00000000] beat=46
+886 ns tb.slaves_1 Sent Read Data: 0fffffff700000000
+902 ns tb.slaves_0 Received write request in memory: addr=[0x30] data=[0fffffff600000000] beat=47
+902 ns tb.slaves_0 Sent Read Data: 0fffffffa00000000
+904 ns tb.slaves_1 Received write request in memory: addr=[0x30] data=[0fffffff600000000] beat=47
+904 ns tb.slaves_1 Sent Read Data: 0fffffffa00000000
+920 ns tb.slaves_0 Received write request in memory: addr=[0x31] data=[0fffffff700000000] beat=48
+920 ns tb.slaves_0 Sent Read Data: 0ffffffd700000000
+922 ns tb.slaves_1 Received write request in memory: addr=[0x31] data=[0fffffff700000000] beat=48
+922 ns tb.slaves_1 Sent Read Data: 0ffffffd700000000
+938 ns tb.slaves_0 Received write request in memory: addr=[0x32] data=[0fffffffa00000000] beat=49
+938 ns tb.slaves_0 Sent Read Data: 0fffffff100000000
+940 ns tb.slaves_1 Received write request in memory: addr=[0x32] data=[0fffffffa00000000] beat=49
+940 ns tb.slaves_1 Sent Read Data: 0fffffff100000000
+956 ns tb.slaves_0 Received write request in memory: addr=[0x33] data=[0ffffffd700000000] beat=50
+956 ns tb.slaves_0 Sent Read Data: 00000002c00000000
+958 ns tb.slaves_1 Received write request in memory: addr=[0x33] data=[0ffffffd700000000] beat=50
+958 ns tb.slaves_1 Sent Read Data: 00000002c00000000
+974 ns tb.slaves_0 Received write request in memory: addr=[0x34] data=[0fffffff100000000] beat=51
+974 ns tb.slaves_0 Sent Read Data: 00000001200000000
+976 ns tb.slaves_1 Received write request in memory: addr=[0x34] data=[0fffffff100000000] beat=51
+976 ns tb.slaves_1 Sent Read Data: 00000001200000000
+992 ns tb.slaves_0 Received write request in memory: addr=[0x35] data=[00000002c00000000] beat=52
+992 ns tb.slaves_0 Sent Read Data: 00000000500000000
+994 ns tb.slaves_1 Received write request in memory: addr=[0x35] data=[00000002c00000000] beat=52
+994 ns tb.slaves_1 Sent Read Data: 00000000500000000
+1010 ns tb.slaves_0 Received write request in memory: addr=[0x36] data=[00000001200000000] beat=53
+1010 ns tb.slaves_0 Sent Read Data: 00000000a00000000
+1012 ns tb.slaves_1 Received write request in memory: addr=[0x36] data=[00000001200000000] beat=53
+1012 ns tb.slaves_1 Sent Read Data: 00000000a00000000
+1028 ns tb.slaves_0 Received write request in memory: addr=[0x37] data=[00000000500000000] beat=54
+1028 ns tb.slaves_0 Sent Read Data: 00000001000000000
+1030 ns tb.slaves_1 Received write request in memory: addr=[0x37] data=[00000000500000000] beat=54
+1030 ns tb.slaves_1 Sent Read Data: 00000001000000000
+1046 ns tb.slaves_0 Received write request in memory: addr=[0x38] data=[00000000a00000000] beat=55
+1046 ns tb.slaves_0 Sent Read Data: 00000001200000000
+1048 ns tb.slaves_1 Received write request in memory: addr=[0x38] data=[00000000a00000000] beat=55
+1048 ns tb.slaves_1 Sent Read Data: 00000001200000000
+1064 ns tb.slaves_0 Received write request in memory: addr=[0x39] data=[00000001000000000] beat=56
+1064 ns tb.slaves_0 Sent Read Data: 0fffffff400000000
+1066 ns tb.slaves_1 Received write request in memory: addr=[0x39] data=[00000001000000000] beat=56
+1066 ns tb.slaves_1 Sent Read Data: 0fffffff400000000
+1082 ns tb.slaves_0 Received write request in memory: addr=[0x3A] data=[00000001200000000] beat=57
+1082 ns tb.slaves_0 Sent Read Data: 00000000000000000
+1084 ns tb.slaves_1 Received write request in memory: addr=[0x3A] data=[00000001200000000] beat=57
+1084 ns tb.slaves_1 Sent Read Data: 00000000000000000
+1100 ns tb.slaves_0 Received write request in memory: addr=[0x3B] data=[0fffffff400000000] beat=58
+1100 ns tb.slaves_0 Sent Read Data: 0ffffffed00000000
+1102 ns tb.slaves_1 Received write request in memory: addr=[0x3B] data=[0fffffff400000000] beat=58
+1102 ns tb.slaves_1 Sent Read Data: 0ffffffed00000000
+1118 ns tb.slaves_0 Received write request in memory: addr=[0x3C] data=[00000000000000000] beat=59
+1118 ns tb.slaves_0 Sent Read Data: 0ffffffce00000000
+1120 ns tb.slaves_1 Received write request in memory: addr=[0x3C] data=[00000000000000000] beat=59
+1120 ns tb.slaves_1 Sent Read Data: 0ffffffce00000000
+1136 ns tb.slaves_0 Received write request in memory: addr=[0x3D] data=[0ffffffed00000000] beat=60
+1136 ns tb.slaves_0 Sent Read Data: 0fffffffd00000000
+1138 ns tb.slaves_1 Received write request in memory: addr=[0x3D] data=[0ffffffed00000000] beat=60
+1138 ns tb.slaves_1 Sent Read Data: 0fffffffd00000000
+1154 ns tb.slaves_0 Received write request in memory: addr=[0x3E] data=[0ffffffce00000000] beat=61
+1154 ns tb.slaves_0 Sent Read Data: 00000000d00000000
+1156 ns tb.slaves_1 Received write request in memory: addr=[0x3E] data=[0ffffffce00000000] beat=61
+1156 ns tb.slaves_1 Sent Read Data: 00000000d00000000
+PERFORMANCE_RESULT: N=1 CORES=2 HOP=1 MULT=4 ADD=6 SAMPLES=40 START=20 END=1164 CYCLES=1144 IDEAL=629 OVERHEAD=515
+@1166 ns Simulation complete. Verifying Slave memory...
+Core 0 [OK]
+Core 1 [OK]
+Verification Successful!
+1166 ns tb.slaves_0 Received write request in memory: addr=[0x3F] data=[0fffffffd00000000] beat=62
+
+Info: /OSCI/SystemC: Simulation stopped by user.
+TESTBENCH PASS
+
+=== STDERR ===
+
+        SystemC 2.3.3-Accellera --- Jun 25 2026 10:44:53
+        Copyright (c) 1996-2018 by all Contributors,
+        ALL RIGHTS RESERVED

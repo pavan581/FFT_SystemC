@@ -118,7 +118,7 @@ For each scenario defined in the configuration file, the test runner performs th
    * `-DFFT_HOP`: Start delay (cycles) between sequential cores.
    * `-DFFT_SAMPLES`: Total samples to process.
    * `-DFFT_NUM_MULT` / `-DFFT_NUM_ADD`: Multiplier and adder resource limitations.
-   * `-DUSE_SLAVE_FROM_FILE`: Condition flag if using pre-defined signal inputs.
+   * `-DUSE_CSV_INIT`: Condition flag if using pre-defined signal inputs.
 3. **Stimulus Generation**: If `use_file_stim` is true, and stimulus file is available at `out/test_runs/<case_name>/stimulus_core_<core_id>.csv`, then it is used. Otherwise the script calls `generate_stimulus.py` to generate periodic input signals (such as sine, multi-tone, square, triangle, or complex exponentials) matching the core's scenario requirements.
 4. **Execution & Log Capture**: Runs the compiled binary and captures standard output, standard error, and exit codes. Outputs are logged to `out/test_runs/<case_name>/sim_log.txt`.
 5. **VCD Tracing**: Saves VCD waveforms of AXI channels and internal registers to `out/test_runs/<case_name>/trace.vcd` for wave visualization.
